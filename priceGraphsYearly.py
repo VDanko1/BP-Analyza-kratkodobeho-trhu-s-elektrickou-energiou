@@ -3,18 +3,21 @@ import pandas as pd
 import requests
 import matplotlib.pyplot as plt
 from datetime import datetime
+import numpy as np
 
 
-api_url = "https://isot.okte.sk/api/v1/idm/results?deliveryDayFrom=2020-01-01&deliveryDayTo=2021-01-01&productType=60"
 
-response = requests.get(api_url)
+def load_and_store_data():
+    api_url = "https://isot.okte.sk/api/v1/idm/results?deliveryDayFrom=2023-01-01&deliveryDayTo=2023-12-31&productType=60"
 
-if response.status_code == 200:
-    filename = "IDM_results_2020.pkl"
-    with open(filename, "wb") as file:
-        pickle.dump(response.json(), file)
-else:
-    print(f"Error: {response.status_code}")
+    response = requests.get(api_url)
+
+    if response.status_code == 200:
+        filename = "Data/IDM_results_2023_correct.pkl"
+        with open(filename, "wb") as file:
+            pickle.dump(response.json(), file)
+    else:
+        print(f"Error: {response.status_code}")
 
 
 def visualize_av_price_in_year(filename):
@@ -144,21 +147,15 @@ def visualize_av_prices_overlay(filename_2022, filename_2023):
         dates_2023 = [entry['deliveryDay'] for entry in data_2023]
         prices_2023 = [entry['priceWeightedAverage'] for entry in data_2023]
 
-        # Convert string dates to datetime objects
-        dates_2022 = [datetime.strptime(date, '%Y-%m-%d') for date in dates_2022]
-        dates_2023 = [datetime.strptime(date, '%Y-%m-%d') for date in dates_2023]
-
-        # Combine dates and prices from both years
-        all_dates = dates_2022 + dates_2023
-        all_prices = prices_2022 + prices_2023
 
         # Create the plot with two lines
         plt.figure(figsize=(20, 6))
-        plt.plot(all_dates, all_prices, linestyle='-', color='b', label='Prices')
+        plt.plot(prices_2022, linestyle='-', color='g', label='Prices 2022')
+        plt.plot(prices_2023, linestyle='-', color='r', label='Prices 2023')
         plt.title('Price Trend from API Data')
-        plt.xlabel('Date')
+        plt.xlabel('Months in a year')
         plt.ylabel('Average price €/MWh')
-        plt.xticks(rotation=45)
+        plt.xticks(np.arange(0, len(prices_2022)+1, len(prices_2022)//12), range(0, 13))
         plt.tight_layout()
 
         # Show the plot
@@ -169,7 +166,9 @@ def visualize_av_prices_overlay(filename_2022, filename_2023):
         print(f"Error: {e}")
 
 
-visualize_av_prices_two_years("IDM_results_2020.pkl", "IDM_results_2021.pkl")
+#visualize_av_prices_two_years("IDM_results_2020.pkl", "IDM_results_2021.pkl")
+visualize_av_prices_overlay("Data/IDM_results_2022.pkl", "Data/IDM_results_2023_correct.pkl")
+#load_and_store_data()
 #visualize_av_prices_overlay("IDM_results_2022.pkl", "IDM_results_2023.pkl")
 #visualize_av_prices_not_overlay("IDM_results_2022.pkl", "IDM_results_2023.pkl")
 #visualize_av_price_in_year("IDM_results_2020.pkl")

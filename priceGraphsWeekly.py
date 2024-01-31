@@ -59,4 +59,4 @@ def visualize_av_price_in_week(filename):
         print(f"Error: {e}")
 
 
-visualize_av_price_in_week("IDM_results_2023_04_12-10_12.pkl")
+visualize_av_price_in_week("Data/IDM_results_2023_04_12-10_12.pkl")

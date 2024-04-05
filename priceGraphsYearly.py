@@ -7,17 +7,28 @@ import numpy as np
 
 
 def load_and_store_data_okte():
-    api_url = "https://isot.okte.sk/api/v1/idm/results?deliveryDayFrom=2023-12-11&deliveryDayTo=2023-12-11&productType=60"
+    api_url = "https://isot.okte.sk/api/v1/idm/results?deliveryDayFrom=2023-11-01&deliveryDayTo=2023-11-30&productType=15"
 
     response = requests.get(api_url)
 
     if response.status_code == 200:
-        filename = "Data/IDM_results_2023-12-11.pkl"
+        filename = "Data/IDM_results_november_15min.pkl"
         with open(filename, "wb") as file:
             pickle.dump(response.json(), file)
     else:
         print(f"Error: {response.status_code}")
 
+def load_and_store_data_borrowed():
+    api_url = "https://markets.tradingeconomics.com/chart/eecxm:ind?span=1m&securify=new&url=/commodity/carbon&AUTH=K3G0OIIGcJ2ojK4wqITEnYx5jnqDefwNGP54u9Ty11T76niQsWqDvjhrbV%2Bmk0S0&ohlc=0"
+
+    response = requests.get(api_url)
+
+    if response.status_code == 200:
+        filename = "Data/EU_povolenky_jan22_feb16"
+        with open(filename, "wb") as file:
+            pickle.dump(response.json(), file)
+    else:
+        print(f"Error: {response.status_code}")
 
 def load_and_store_data_oil():
     from_date_str = "2023-01-01"
@@ -54,142 +65,84 @@ def print_data ():
     print(oil_price_data)
 
 
-def visualize_av_price_in_year(filename):
-    try:
-        # Load the pickle file
-        with open(filename, "rb") as file:
-            data = pickle.load(file)
-
-        # Extract relevant information for plotting
-        dates = [entry['deliveryDay'] for entry in data]
-        prices = [entry['priceWeightedAverage'] for entry in data]
-
-        # Convert string dates to datetime objects
-        dates = [datetime.strptime(date, '%Y-%m-%d') for date in dates]
-
-        # Create the plot
-        plt.figure(figsize=(20, 6))
-        plt.plot(dates, prices, linestyle='-', color='b')
-        plt.title('Price Trend from API Data')
-        plt.xlabel('Date')
-        plt.ylabel('Average price €/MWh')
-        plt.xticks(rotation=45)
-        plt.tight_layout()
-
-        # Show the plot
-        plt.show()
-    except FileNotFoundError:
-        print(f"Error: File {filename} not found.")
-    except Exception as e:
-        print(f"Error: {e}")
-
-
-def visualize_av_prices_two_years(filename_2022, filename_2023):
+def visualize_av_prices_overlay():
     try:
         # Load the pickle files
-        with open(filename_2022, "rb") as file_2022:
-            data_2022 = pickle.load(file_2022)
+        with open('Data/DAM_results_1.pkl', "rb") as file_2022:
+            data_dam1 = pickle.load(file_2022)
 
-        with open(filename_2023, "rb") as file_2023:
-            data_2023 = pickle.load(file_2023)
+        with open('Data/DAM_results_2.pkl', "rb") as file_2022:
+            data_dam2 = pickle.load(file_2022)
+
+        with open('Data/DAM_results_3.pkl', "rb") as file_2022:
+            data_dam3 = pickle.load(file_2022)
+
+        with open('Data/DAM_results_4.pkl', "rb") as file_2022:
+            data_dam4 = pickle.load(file_2022)
+
+        with open('Data/DAM_results_2023WD.pkl', "rb") as file_2022:
+            data_idm = pickle.load(file_2022)
+
+        with open('Data/DAM_results_2023DEC.pkl', "rb") as file_2022:
+            data_dec = pickle.load(file_2022)
+
+        df_dam = pd.DataFrame(data_dam1)
+        df_dam2 = pd.DataFrame(data_dam2)
+        df_dam3 = pd.DataFrame(data_dam3)
+        df_dam4 = pd.DataFrame(data_dam4)
+        df_damWD = pd.DataFrame(data_idm)
+        df_damdec = pd.DataFrame(data_dec)
+
+        description_dam = df_dam['price'].describe()
+        description_dam2 = df_dam2['price'].describe()
+        description_dam3 = df_dam3['price'].describe()
+        description_dam4 = df_dam4['price'].describe()
+        description_damWD = df_damWD['price'].describe()
+        description_damdec = df_damdec['price'].describe()
+
+        print("Description for df_dam:")
+        print(description_dam)
+
+        print("\nDescription for df_dam2:")
+        print(description_dam2)
+
+        print("\nDescription for df_dam3:")
+        print(description_dam3)
+
+        print("\nDescription for df_dam4:")
+        print(description_dam4)
+
+        print("\nDescription for df_damWD:")
+        print(description_damWD)
+
+        print("\nDescription for df_damDEC:")
+        print(description_damdec)
+
+        df_idm = pd.DataFrame(data_idm)
 
         # Extract relevant information for plotting
-        dates_2022 = [entry['deliveryDay'] for entry in data_2022]
-        prices_2022 = [entry['priceWeightedAverage'] for entry in data_2022]
+        date_dam = [entry['deliveryDay'] for entry in data_dam1]
+        price_dam = [entry['price'] for entry in data_dam1]
+        price_dam2 = [entry['price'] for entry in data_dam2]
+        price_dam3 = [entry['price'] for entry in data_dam3]
+        price_dam4 = [entry['price'] for entry in data_dam4]
 
-        dates_2023 = [entry['deliveryDay'] for entry in data_2023]
-        prices_2023 = [entry['priceWeightedAverage'] for entry in data_2023]
 
-        # Convert string dates to datetime objects
-        dates_2022 = [datetime.strptime(date, '%Y-%m-%d') for date in dates_2022]
-        dates_2023 = [datetime.strptime(date, '%Y-%m-%d') for date in dates_2023]
+        #dates_dam = [datetime.strptime(date, '%Y-%m-%d') for date in date_idm]
+        dates_idm = [datetime.strptime(date, '%Y-%m-%d') for date in date_dam]
 
         # Create the plot with two lines
         plt.figure(figsize=(20, 6))
-        plt.plot(dates_2022, prices_2022, linestyle='-', color='b', label='2022 Prices')
-        plt.plot(dates_2023, prices_2023, linestyle='-', color='r', label='2023 Prices')
-        plt.title('Price Trend from API Data')
-        plt.xlabel('Date')
-        plt.ylabel('Average price €/MWh')
-        plt.xticks(rotation=45)
+        plt.plot(price_dam, linestyle='-', color='g', label='DAM prices 1 week of december 2023')
+        plt.plot(price_dam2, linestyle='-', color='r', label='DAM prices 2 week of december 2023')
+        plt.plot(price_dam3, linestyle='-', color='b', label='DAM prices of Christmas week of december 2023')
+        plt.plot(price_dam4, linestyle='-', color='olive', label='DAM prices 4 week of december 2023')
+
+        plt.title('Weekly prices of december 2023 on DAM market - granularity 1 hour', fontsize = 16)
+        plt.xlabel('Period', fontsize = 16)
+        plt.ylabel('Price €/MWh', fontsize = 16)
         plt.legend()
-        plt.tight_layout()
-
-        # Show the plot
-        plt.show()
-    except FileNotFoundError as e:
-        print(f"Error: File not found - {e}")
-    except Exception as e:
-        print(f"Error: {e}")
-
-
-def visualize_av_prices_not_overlay(filename_2022, filename_2023):
-    try:
-        # Load the pickle files
-        with open(filename_2022, "rb") as file_2022:
-            data_2022 = pickle.load(file_2022)
-
-        with open(filename_2023, "rb") as file_2023:
-            data_2023 = pickle.load(file_2023)
-
-        # Extract relevant information for plotting
-        dates_2022 = [entry['deliveryDay'] for entry in data_2022]
-        prices_2022 = [entry['priceWeightedAverage'] for entry in data_2022]
-
-        dates_2023 = [entry['deliveryDay'] for entry in data_2023]
-        prices_2023 = [entry['priceWeightedAverage'] for entry in data_2023]
-
-        # Convert string dates to datetime objects
-        dates_2022 = [datetime.strptime(date, '%Y-%m-%d') for date in dates_2022]
-        dates_2023 = [datetime.strptime(date, '%Y-%m-%d') for date in dates_2023]
-
-        # Create the plot with two lines
-        plt.figure(figsize=(20, 6))
-        plt.plot(dates_2022, prices_2022, linestyle='-', color='b', label='2022 Prices')
-        plt.plot(dates_2023, prices_2023, linestyle='-', color='r', label='2023 Prices')
-        plt.title('Price Trend from API Data')
-        plt.xlabel('Date')
-        plt.ylabel('Average price €/MWh')
-        plt.xticks(rotation=45)
-        plt.legend()  # Add a legend to differentiate between the lines
-        plt.tight_layout()
-        plt.savefig()
-
-        # Show the plot
-        plt.show()
-    except FileNotFoundError as e:
-        print(f"Error: File not found - {e}")
-    except Exception as e:
-        print(f"Error: {e}")
-
-
-from collections import defaultdict
-
-
-def visualize_av_prices_overlay(filename_2022, filename_2023):
-    try:
-        # Load the pickle files
-        with open(filename_2022, "rb") as file_2022:
-            data = pickle.load(file_2022)
-
-        with open(filename_2023, "rb") as file_2023:
-            data_1 = pickle.load(file_2023)
-
-        # Extract relevant information for plotting
-        dates_2022 = [entry['deliveryDay'] for entry in data]
-        price = [entry['priceWeightedAverage'] for entry in data]
-
-        dates_2023 = [entry['deliveryDay'] for entry in data_1]
-        price1 = [entry['price'] for entry in data_1]
-
-        # Create the plot with two lines
-        plt.figure(figsize=(20, 6))
-        plt.plot(price, linestyle='-', color='g', label='Prices 2022')
-        plt.plot(price1, linestyle='-', color='r', label='Prices 2023')
-        plt.title('Price Trend from API Data')
-        plt.xlabel('Months in a year')
-        plt.ylabel('Average price €/MWh')
-        plt.xticks(np.arange(0, len(price) + 1, len(price) // 12), range(0, 13))
+        plt.savefig("Vyvoj cien DAM za december 2023 (tyzdne) - final")
         plt.tight_layout()
 
         # Show the plot
@@ -203,8 +156,10 @@ def visualize_av_prices_overlay(filename_2022, filename_2023):
 # visualize_av_prices_two_years("IDM_results_2020.pkl", "IDM_results_2021.pkl")
 #visualize_av_prices_overlay("Data/IDM_results_2021.pkl", "Data/Oil_price_2021")
 load_and_store_data_okte()
+#visualize_av_prices_overlay()
+#load_and_store_data_borrowed()
 #load_and_store_data_oil()
 #print_data()
-# visualize_av_prices_overlay("IDM_results_2022.pkl", "IDM_results_2023.pkl")
-# visualize_av_prices_not_overlay("IDM_results_2022.pkl", "IDM_results_2023.pkl")
+#visualize_av_prices_overlay()
+#visualize_av_prices_not_overlay("Data/IDM_results_2022.pkl", "Data/IDM_results_2023.pkl")
 # visualize_av_price_in_year("IDM_results_2020.pkl")

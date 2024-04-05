@@ -5,90 +5,223 @@ import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
 
+
 def visualize_av_price_in_week(filename):
     try:
         # Load the pickle file
         with open(filename, "rb") as file:
             data = pickle.load(file)
 
-        # Convert data to a Pandas DataFrame
-        df = pd.DataFrame(data)
+        #columns_to_read = ['Date', 'Start', 'Poland', 'Austria', 'France', 'Denmark 1', 'Netherlands', 'Hungary',
+        #                   'Czech Republic', 'Germany/Luxembourg', ]
 
-        # Convert 'deliveryDay' and 'deliveryStart' columns to datetime type
-        df['deliveryDay'] = pd.to_datetime(df['deliveryDay'])
-        df['deliveryStart'] = pd.to_datetime(df['deliveryStart'])
 
-        # Set 'deliveryStart' as the index for time series plotting
-        df.set_index('deliveryStart', inplace=True)
+        columns_to_read = ['Date', 'Start', 'Austria', 'Czech Republic', 'Germany/Luxembourg', 'Hungary']
+        data_foreign_market = pd.read_csv('Data/Day-Ahead_GERLUX_AUS_POL_CZ_HU.csv', sep=';', usecols=columns_to_read)
+        df_slovak_market = pd.DataFrame(data)
+
+        df_slovak_market['deliveryStart'] = pd.to_datetime(df_slovak_market['deliveryStart'])
+        data_foreign_market['Date'] = pd.to_datetime(data_foreign_market['Date'])
+        data_foreign_market['Start'] = pd.to_datetime(data_foreign_market['Start'], format="%I:%M %p").dt.strftime(
+            '%H:%M:%S')
+
+        data_foreign_market['Date'] = data_foreign_market['Date'].astype(str) + ' ' + data_foreign_market[
+            'Start'].astype(str)
+        data_foreign_market['Date'] = pd.to_datetime(data_foreign_market['Date'], format="%Y-%m-%d %H:%M:%S")
+        data_foreign_market['Date'] = data_foreign_market['Date'] - pd.Timedelta(hours=1)
+        """
+        correlationCzech = np.corrcoef(df_slovak_market['price'], data_foreign_market['Czech Republic'])[0, 1]
+        correlationAustria = np.corrcoef(df_slovak_market['price'], data_foreign_market['Austria'])[0, 1]
+        correlationGermany = np.corrcoef(df_slovak_market['price'], data_foreign_market['Germany/Luxembourg'])[0, 1]
+        correlationHungary = np.corrcoef(df_slovak_market['price'], data_foreign_market['Hungary'])[0, 1]
+        correlationPoland = np.corrcoef(df_slovak_market['price'], data_foreign_market['Poland'])[0, 1]
+        correlationFrance = np.corrcoef(df_slovak_market['price'], data_foreign_market['France'])[0, 1]
+        correlationNetherlands = np.corrcoef(df_slovak_market['price'], data_foreign_market['Netherlands'])[0, 1]
+        correlationDenmark = np.corrcoef(df_slovak_market['price'], data_foreign_market['Denmark 1'])[0, 1]
+       
+        print("Czech Republic: %.2f" % correlationCzech)
+        print("Austria: %.2f" % correlationAustria)
+        print("Germany: %.2f" % correlationGermany)
+        print("Hungary: %.2f" % correlationHungary)
+        print("Poland: %.2f" % correlationPoland)
+        print("Netherlands: %.2f" % correlationNetherlands)
+        print("France: %.2f" % correlationFrance)
+        print("Denmark: %.2f" % correlationDenmark)
+        """
 
         # Create the plot
-        plt.figure(figsize=(20, 6))
-        plt.plot(df.index, df['priceWeightedAverage'], linestyle='-', marker="*", color='b')
+        plt.figure(figsize=(15, 6))
+        plt.plot(df_slovak_market['deliveryStart'], df_slovak_market['price'], linestyle='-', color='b',
+                 label='Slovak Market')
+        plt.plot(data_foreign_market['Date'], data_foreign_market['Austria'], linestyle='-', color='r', label='Austria')
+        plt.plot(data_foreign_market['Date'], data_foreign_market['Czech Republic'], linestyle='-', color='y',
+                 label='Czech Republic')
+        plt.plot(data_foreign_market['Date'], data_foreign_market['Hungary'], linestyle='-', color='g', label='Hungary')
+        plt.plot(data_foreign_market['Date'], data_foreign_market['Germany/Luxembourg'], linestyle='-',
+              color='k', label='Germany/Luxembourg')
 
-        plt.title('Price Trend from 4.12.2023 up to 11.12.2023')
+        plt.title('DAM results from SADC markets - granularity 1 hour', fontsize = 16)
         plt.xlabel('Date')
-        plt.ylabel('Average price €/MWh')
+        plt.ylabel('Price €/MWh')
         plt.xticks(rotation=45)
         plt.tight_layout()
-
-        # Add legend with date and day of the week
-        legend_labels = [f"{date.date()} - {date.strftime('%A')}" for date in df.index]
-        plt.legend(legend_labels, bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=8)
-
-        # Save the plot
-        plt.savefig("continuous_prices.png")
-
-        # Show the plot
+        plt.legend()
+        plt.savefig("Graphs/SADC price comparasions (7.7 - 17.7.2023)- CZ,GER,AU,SK,HU.jpg" )
         plt.show()
+
 
     except FileNotFoundError:
         print(f"Error: File {filename} not found.")
     except Exception as e:
         print(f"Error: {e}")
 
-def visualize_av_price_in_week_overlay(filename, filename1, filename2, filename3):
+def visualize_idm_dam():
+    with open('Data/DAM_results_2023DEC.pkl', "rb") as file_2023:
+        data_dam_2023 = pickle.load(file_2023)
+
+    with open('Data/IDM_results_december_2023.pkl', "rb") as file_2023:
+        data_idm_2023 = pickle.load(file_2023)
+
+    with open('Data/IDM_results_december_15min.pkl', "rb") as file_2023:
+        data_idm_2023_15min = pickle.load(file_2023)
+
+    df_dam = pd.DataFrame(data_dam_2023)
+    df_idm = pd.DataFrame(data_idm_2023)
+    df_idm_15 = pd.DataFrame(data_idm_2023_15min)
+
+    df_idm_15.dropna()
+
+    df_dam['deliveryStart'] = pd.to_datetime(df_dam['deliveryStart']).dt.tz_localize(None)
+    df_idm['deliveryStart'] = pd.to_datetime(df_idm['deliveryStart']).dt.tz_localize(None)
+    df_idm_15['deliveryStart'] = pd.to_datetime(df_idm_15['deliveryStart']).dt.tz_localize(None)
+
+    #df_dam_december = df_dam[(df_dam['deliveryStart'].dt.month == 12) & (df_dam['deliveryStart'].dt.year == 2023)]
+    #df_idm_december = df_idm[(df_idm['deliveryStart'].dt.month == 12) & (df_idm['deliveryStart'].dt.year == 2023)]
+
+    plt.figure(figsize=(20, 6))
+
+    plt.plot(df_idm['deliveryStart'], df_idm['priceWeightedAverage'], linestyle='-', color='blue',
+             label="IDM (60 min) electricity price €/MWh")
+
+    plt.plot(df_dam['deliveryStart'], df_dam['price'], linestyle='-', color='r',
+             label="DAM Electricity price €/MWh")
+
+    plt.plot(df_idm_15['deliveryStart'], df_idm_15['priceAverage'], linestyle='-', color='g',alpha=0.2,
+             label="IDM (15 min) electricity price €/MWh")
+
+
+    plt.xticks(rotation=30)  # Adjust the rotation if needed
+    plt.title("DAM and IDM prices with 60 and 15 minute period of december 2023  - granularity 1 hour", fontsize=20)
+    plt.xlabel("Date", fontsize=12)
+    plt.ylabel("Price €/MWh", fontsize=12)
+    plt.legend(fontsize='large')
+    plt.tight_layout()
+    #plt.savefig("DAM a IDM (60,15 min) porovnanie december 2023")
+    # Show the plot
+    plt.show()
+
+
+def visualize_av_price_in_week_overlay():
     try:
-        # Load the pickle files
-        with open(filename, "rb") as file_2022:
-            data = pickle.load(file_2022)
+        with open('Data/DAM_results_2023.pkl', "rb") as file_2023:
+            data_dam_2023 = pickle.load(file_2023)
 
-        with open(filename1, "rb") as file_2023:
-            data1 = pickle.load(file_2023)
+        with open('Data/DAM_results_2020.pkl', "rb") as file_2020:
+            data_dam_2020 = pickle.load(file_2020)
 
-        with open(filename2, "rb") as file_2022:
-            data2 = pickle.load(file_2022)
+        with open('Data/DAM_results_2021.pkl', "rb") as file_2021:
+            data_dam_2021 = pickle.load(file_2021)
 
-        with open(filename3, "rb") as file_2023:
-            data3 = pickle.load(file_2023)
+        with open('Data/DAM_results_2022.pkl', "rb") as file_2022:
+            data_dam_2022 = pickle.load(file_2022)
 
-        # Extract relevant information for plotting
-        dates = [entry['deliveryDay'] for entry in data]
-        prices = [entry['priceWeightedAverage'] for entry in data]
+        columns_to_read = ['Date', 'Price']
+        data_plyn = pd.read_csv('Data/Plyn-2020-2024.csv', sep=',', usecols=columns_to_read)
+        data_ropa = pd.read_csv('Data/Ropa-2020-2024.csv', sep=',', usecols=columns_to_read)
+        data_uhlie = pd.read_csv('Data/Uhlie-2020-2024.csv', sep=',', usecols=columns_to_read)
 
-        dates_1 = [entry['deliveryDay'] for entry in data1]
-        prices_1 = [entry['priceWeightedAverage'] for entry in data1]
+        data_2022_plyn = data_plyn[data_plyn['Date'].str.contains('2022')]
+        data_2022_ropa = data_ropa[data_ropa['Date'].str.contains('2022')]
+        data_2022_uhlie = data_uhlie[data_uhlie['Date'].str.contains('2022')]
 
-        dates_2 = [entry['deliveryDay'] for entry in data2]
-        prices_2 = [entry['priceWeightedAverage'] for entry in data2]
+        # Prekonvertujte stĺpec 'Date' na formát datetime, ak nie je
+        data_2022_plyn['Date'] = pd.to_datetime(data_2022_plyn['Date'])
+        data_2022_ropa['Date'] = pd.to_datetime(data_2022_ropa['Date'])
+        data_2022_uhlie['Date'] = pd.to_datetime(data_2022_uhlie['Date'])
 
-        dates_3 = [entry['deliveryDay'] for entry in data3]
-        prices_3 = [entry['priceWeightedAverage'] for entry in data3]
+        # Rozdelenie dát z roku 2022 na prvé a druhé polrok
+        data_2022_plyn_prvy_polrok = data_2022_plyn[data_2022_plyn['Date'].dt.month < 6]
+        data_2022_plyn_druhy_polrok = data_2022_plyn[data_2022_plyn['Date'].dt.month >= 6]
 
+        data_2022_ropa_prvy_polrok = data_2022_ropa[data_2022_ropa['Date'].dt.month < 6]
+        data_2022_ropa_druhy_polrok = data_2022_ropa[data_2022_ropa['Date'].dt.month >= 6]
+
+        data_2022_uhlie_prvy_polrok = data_2022_uhlie[data_2022_uhlie['Date'].dt.month < 6]
+        data_2022_uhlie_druhy_polrok = data_2022_uhlie[data_2022_uhlie['Date'].dt.month >= 6]
+
+        data_ropa['Date'] = pd.to_datetime(data_ropa['Date'], format='%m/%d/%Y')
+        data_plyn['Date'] = pd.to_datetime(data_plyn['Date'], format='%m/%d/%Y')
+        data_uhlie['Date'] = pd.to_datetime(data_uhlie['Date'], format='%m/%d/%Y')
+
+
+        date_2023 = [entry['deliveryDay'] for entry in data_dam_2023]
+        price_2023 = [entry['price'] for entry in data_dam_2023]
+
+        date_2020 = [entry['deliveryDay'] for entry in data_dam_2020]
+        price_2020 = [entry['price'] for entry in data_dam_2020]
+
+        date_2021 = [entry['deliveryDay'] for entry in data_dam_2021]
+        price_2021 = [entry['price'] for entry in data_dam_2021]
+
+        date_2022 = [entry['deliveryDay'] for entry in data_dam_2022]
+        price_2022 = [entry['price'] for entry in data_dam_2022]
+
+        dates_2023 = [datetime.strptime(date, '%Y-%m-%d') for date in date_2023]
+        dates_2020 = [datetime.strptime(date, '%Y-%m-%d') for date in date_2020]
+        dates_2021 = [datetime.strptime(date, '%Y-%m-%d') for date in date_2021]
+        dates_2022 = [datetime.strptime(date, '%Y-%m-%d') for date in date_2022]
+
+        df = pd.DataFrame(data_dam_2023)
+
+        df_2022 = pd.DataFrame({'Date': dates_2022, 'Price': price_2022})
+
+        # Rozdelenie dát na prvé a druhé polrok
+        df_2022_prvy_polrok = df_2022[df_2022['Date'].dt.month < 6]
+        df_2022_druhy_polrok = df_2022[df_2022['Date'].dt.month >= 6]
+
+
+        print(df_2022_druhy_polrok.describe())
         # Create the plot
         plt.figure(figsize=(20, 6))
-        plt.plot(prices, linestyle='-', marker=".", color='b', label='Week 4.12 up to 10.12')
-        plt.plot(prices_1, linestyle='-', marker=".", color='r', label='Week 11.12 up to 17.12')
-        plt.plot(prices_2, linestyle='-', marker=".", color='g', label='Week 18.12 up to 24.12')
-        plt.plot(prices_3, linestyle='-', marker=".", color='y', label='Week 25.12 up to 31.12')
+        plt.plot(data_2022_ropa_druhy_polrok['Date'], data_2022_ropa_druhy_polrok['Price'], linestyle='-', color='r',label="Brent Oil price per barrel")
+        plt.plot(data_2022_plyn_druhy_polrok['Date'], data_2022_plyn_druhy_polrok['Price'], linestyle='-', color='g',label="TTF Natural Gas price per cubic metre")
+        plt.plot(data_2022_uhlie_druhy_polrok['Date'], data_2022_uhlie_druhy_polrok['Price'] ,linestyle='-', color='orange',label="Newcastle Coal Price per tonne")
+        #plt.plot(dates_2023, price_2023, linestyle='-', color='blue',alpha=0.3)
+        #plt.plot(dates_2020, price_2020, linestyle='-', color='blue',alpha=0.3)
+        #plt.plot(dates_2021, price_2021, linestyle='-', color='blue',alpha=0.3)
+        plt.plot(df_2022_druhy_polrok['Date'], df_2022_druhy_polrok['Price'], linestyle='-', color='blue',label="DAM Electricity price €/MWh",alpha=0.3)
 
-        days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-        plt.title('Weekly price trends between 4.12 up to 31.12')
-        plt.xlabel('Date')
-        plt.ylabel('Average price €/MWh')
+        average_prices_per_day = df.groupby('deliveryDay')['price'].mean()
+        interpolated_price = np.interp(np.linspace(0, 1, 365), np.linspace(0, 1, len(data_plyn)),
+                                       data_plyn['Price'])
+
+        # Create a new DataFrame with the interpolated 'Price'
+        interpolated_data_plyn = pd.DataFrame(
+            {'Date': pd.date_range(start=data_plyn['Date'].min(), periods=365), 'Price': interpolated_price})
+
+        # Now, calculate the correlation
+        correlationPoland = np.corrcoef(average_prices_per_day, interpolated_data_plyn['Price'])[0, 1]
+
+        #print(correlationPoland)
+
+        plt.xticks(rotation=45, ha='right')  # Adjust the rotation for better readability
         plt.xticks()
+        plt.title("DAM Slovak market prices and commodities Q3 and Q4 of 2022 - granularity 1 day", fontsize=16)
+        plt.xlabel("Date", fontsize = 12)
+        plt.ylabel("Price of commodity in €", fontsize = 12)
         plt.legend()
         plt.tight_layout()
-
+        plt.savefig("DAM a komodity 2022 Q3 Q4 - final")
         # Show the plot
         plt.show()
 
@@ -97,17 +230,8 @@ def visualize_av_price_in_week_overlay(filename, filename1, filename2, filename3
     except Exception as e:
         print(f"Error: {e}")
 
-# Example usage with four filenames
-visualize_av_price_in_week_overlay(
-    "Data/IDM_results_2023_04_12-10_12.pkl",
-    "Data/IDM_results_2023_11_12-17_12.pkl",
-    "Data/IDM_results_2023_18_12-24_12.pkl",
-    "Data/IDM_results_2023_25_12-31_12.pkl"
-)
 
-file_list = [
-    "IDM_results_2023_04_12-10_12.pkl",
-    "IDM_results_2023_11_12-17_12.pkl",
-    "IDM_results_2023_18_12-24_12.pkl",
-    "IDM_results_2023_25_12-31_12.pkl"
-]
+# Example usage with four filenames
+#visualize_av_price_in_week('Data/DAM_results_2024-02-07_2024-02-17.pkl')
+#visualize_av_price_in_week_overlay()
+visualize_idm_dam()

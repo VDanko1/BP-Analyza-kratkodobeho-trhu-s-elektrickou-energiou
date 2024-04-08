@@ -1,6 +1,5 @@
 import itertools
 import pickle
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -19,7 +18,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pickle
+import warnings
+from sklearn.metrics import mean_squared_error
 import pandas as pd
+from sklearn.model_selection import TimeSeriesSplit
 from scipy.stats import stats
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.tsa.seasonal import seasonal_decompose
@@ -38,6 +40,33 @@ from scipy.stats import bartlett
 def SarimaModel():
     with open("Data/DAM_results_2023.pkl", "rb") as file_dam:
         data_dam = pickle.load(file_dam)
+        # Load data
+    with open("Data/DAM_results_2023.pkl", "rb") as file_dam:
+        data_dam_2023 = pickle.load(file_dam)
+
+    with open("Data/DAM_results_2024-JAN-APR.pkl", "rb") as file_dam:
+        data_dam_2024 = pickle.load(file_dam)
+
+    df_dam2023 = pd.DataFrame(data_dam_2023)
+    df_dam2024 = pd.DataFrame(data_dam_2024)
+
+    df_dam2023['deliveryEnd'] = pd.to_datetime(df_dam2023['deliveryEnd'])
+    df_dam2024['deliveryEnd'] = pd.to_datetime(df_dam2024['deliveryEnd'])
+
+    df_dam2023 = df_dam2023[['deliveryEnd', 'price']]
+    df_dam2024 = df_dam2024[['deliveryEnd', 'price']]
+
+    df_dam2023['price'] = pd.to_numeric(df_dam2023['price'], errors='coerce')
+    df_dam2024['price'] = pd.to_numeric(df_dam2024['price'], errors='coerce')
+
+    df_dam2023.dropna(inplace=True)
+    df_dam2024.dropna(inplace=True)
+
+    df_dam2023['price_diff'] = df_dam2023['price'].diff()
+    df_dam2024['price_diff'] = df_dam2024['price'].diff()
+
+    merged_df = pd.concat([df_dam2023, df_dam2024], ignore_index=True)
+    merged_df.dropna(inplace=True)
 
     df_dam = pd.DataFrame(data_dam)
 
@@ -232,88 +261,85 @@ def SarimaModelWithoutGrid():
     plt.show()
     """
 
-
-
-def ArimaModel():
+def data_preparing():
     # Load data
     with open("Data/DAM_results_2023.pkl", "rb") as file_dam:
-        data_dam = pickle.load(file_dam)
+        data_dam_2023 = pickle.load(file_dam)
 
-    df_dam = pd.DataFrame(data_dam)
+    with open("Data/DAM_results_2024-JAN-APR.pkl", "rb") as file_dam:
+        data_dam_2024 = pickle.load(file_dam)
 
-    df_dam['deliveryEnd'] = pd.to_datetime(df_dam['deliveryEnd'])
+    df_dam2023 = pd.DataFrame(data_dam_2023)
+    df_dam2024 = pd.DataFrame(data_dam_2024)
 
-    df_dam = df_dam[['deliveryEnd', 'price']]
-
-    # Ensure 'price' column is numerical
-    df_dam['price'] = pd.to_numeric(df_dam['price'], errors='coerce')
-
-    # Remove any rows with missing values
-    df_dam.dropna(inplace=True)
-
-    # Perform Dickey-Fuller test for stationarity
-    result = adfuller(df_dam['price'])
-    print('ADF Statistic:', result[0])
-    print('p-value:', result[1])
-
-    # If p-value is greater than 0.05, difference the data
-    if result[1] > 0.05:
-        df_dam['price_diff'] = df_dam['price'] - df_dam['price'].shift(1)
-        df_dam = df_dam.dropna()
-    else:
-        df_dam['price_diff'] = df_dam['price']
-
-    # Split data into training and test sets
-    train_size = int(len(df_dam) * 0.8)
-    train, test = df_dam.iloc[:train_size], df_dam.iloc[train_size:]
-
-    # Define the range of p, d, and q values
-    p_range = range(0, 3)  # Change the range as needed
-    d_range = range(0, 2)  # Change the range as needed
-    q_range = range(0, 3)  # Change the range as needed
-
-    # Generate all possible combinations of p, d, and q values
-    parameter_combinations = list(itertools.product(p_range, d_range, q_range))
-
-    best_aic = float("inf")
-    best_params = None
-
-    # Grid search
-    for params in parameter_combinations:
-        try:
-            model = ARIMA(train['price_diff'], order=params)
-            results = model.fit()
-            if results.aic < best_aic:
-                best_aic = results.aic
-                best_params = params
-        except:
-            continue
-
-    print("Best AIC:", best_aic)
-    print("Best Parameters (p, d, q):", best_params)
-
-    # Fit ARIMA model with best parameters on training data
-    model = ARIMA(train['price_diff'], order=best_params)
-    results = model.fit()
-
-    # Forecast on test set
-    forecast_steps = len(test)
-    forecast = results.forecast(steps=forecast_steps)
-
-    # Plot actual vs forecasted prices
-    plt.figure(figsize=(12, 6))
-    plt.plot(train.index, train['price'], label='Training Data')
-    plt.plot(test.index, test['price'], label='Test Data')
-    plt.plot(test.index, forecast, label='Forecasted Prices')
-    plt.title('Actual vs Forecasted Prices')
-    plt.xlabel('Date')
-    plt.ylabel('Price')
-    plt.legend()
-    plt.show()
-
-#ArimaModel()
-SarimaModelWithoutGrid()
-#preparingData()
-#SarimaModel()
+    df_dam2023['deliveryEnd'] = pd.to_datetime(df_dam2023['deliveryEnd'])
+    df_dam2024['deliveryEnd'] = pd.to_datetime(df_dam2024['deliveryEnd'])
 
 
+    df_dam2023 = df_dam2023[['deliveryEnd', 'price']]
+    df_dam2024 = df_dam2024[['deliveryEnd', 'price']]
+
+    df_dam2023.set_index('deliveryEnd', inplace=True)
+    df_dam2024.set_index('deliveryEnd', inplace=True)
+    df_dam2023.index.freq = 'H'
+    df_dam2024.index.freq = 'H'
+
+    df_dam2023['price'] = pd.to_numeric(df_dam2023['price'], errors='coerce')
+    df_dam2024['price'] = pd.to_numeric(df_dam2024['price'], errors='coerce')
+
+    df_dam2023.dropna(inplace=True)
+    df_dam2024.dropna(inplace=True)
+
+    df_dam2023['price_diff'] = df_dam2023['price'].diff()
+    df_dam2024['price_diff'] = df_dam2024['price'].diff()
+
+    merged_df = pd.concat([df_dam2023, df_dam2024])
+    merged_df.dropna(inplace=True)
+    return merged_df
+
+def ArimaModel():
+    merged_df = data_preparing()
+
+    #stepwise_fit = auto_arima(merged_df['price_diff'], trace=True, suppress_warnings=True)
+    #print(stepwise_fit.summary())
+
+    n_splits = 5
+    tscv = TimeSeriesSplit(n_splits=n_splits)
+
+    total_mse = 0
+
+    for train_index, test_index in tscv.split(merged_df):
+        warnings.filterwarnings("ignore")
+
+        train_data = merged_df.iloc[train_index]
+        test_data = merged_df.iloc[test_index]
+
+        # Natrénovanie modelu ARIMA
+        model = ARIMA(train_data['price_diff'], order=(2, 1, 2))
+        model_fit = model.fit()
+
+        predictions = model_fit.forecast(steps=len(test_data))
+        predictions_df = pd.DataFrame(predictions, index=test_data.index, columns=['Predicted'])
+
+        print(predictions_df.head())
+        print(train_data)
+        #print(test_data)
+        """
+        # Predikcia na testovacích dátach
+        predictions = model_fit.forecast(steps=len(test_data))
+        predictions_df = pd.DataFrame(predictions, index=test_data.index, columns=['Predicted'])
+        #predictions_df.dropna(inplace=True)
+        print(predictions.head())
+        print(predictions_df.head())
+        #inverzna transformacia
+        predictions_df['Predicted_original'] = merged_df['price'].iloc[0] + predictions_df['Predicted'].cumsum()
+
+        mse = mean_squared_error(test_data['price'], predictions_df['Predicted_original'])
+        total_mse+=mse
+        print(f"MSE for fold: {mse:.2f}")
+
+        print("Priemerne MSE " + str(total_mse/n_splits))
+        """
+
+
+ArimaModel()

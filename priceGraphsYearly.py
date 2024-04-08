@@ -7,12 +7,12 @@ import numpy as np
 
 
 def load_and_store_data_okte():
-    api_url = "https://isot.okte.sk/api/v1/idm/results?deliveryDayFrom=2023-11-01&deliveryDayTo=2023-11-30&productType=15"
+    api_url = "https://isot.okte.sk/api/v1/dam/results?deliveryDayFrom=2024-01-01&deliveryDayTo=2024-04-01"
 
     response = requests.get(api_url)
 
     if response.status_code == 200:
-        filename = "Data/IDM_results_november_15min.pkl"
+        filename = "Data/DAM_results_2024-JAN-APR.pkl"
         with open(filename, "wb") as file:
             pickle.dump(response.json(), file)
     else:

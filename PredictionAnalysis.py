@@ -220,7 +220,6 @@ def STLDecomposition():
     # STl dekompozícia
     stl = STL(combined_years['diff_price'], seasonal=13)  # 13 je priemerná sezónna dĺžka v roku
 
-
     # Vykonanie dekompozície
     result = stl.fit()
 

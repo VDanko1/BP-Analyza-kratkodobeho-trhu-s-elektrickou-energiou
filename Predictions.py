@@ -279,7 +279,6 @@ def data_preparing():
     df_dam2023['deliveryEnd'] = pd.to_datetime(df_dam2023['deliveryEnd'])
     df_dam2024['deliveryEnd'] = pd.to_datetime(df_dam2024['deliveryEnd'])
 
-
     df_dam2023 = df_dam2023[['deliveryEnd', 'price']]
     df_dam2024 = df_dam2024[['deliveryEnd', 'price']]
 
@@ -361,6 +360,7 @@ def ETSModel():
 
     total_mse = 0
     i = 0
+    #2023-01-01 po 2024-03-01
 
     for train_index, test_index in tscv.split(merged_df):
         # Rozdelenie dát na trénovaciu a testovaciu sadu

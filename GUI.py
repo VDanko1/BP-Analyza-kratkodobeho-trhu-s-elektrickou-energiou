@@ -4,29 +4,34 @@ from fontTools.merge import layout
 from PIL import Image
 import time
 
+date_from = "som kokot"
+date_to = "som kokot"
 
-def analysis_list():
+def home_page():
     IMAGE_DIRECTORY = "Graphs"
 
     obrazky = os.listdir(IMAGE_DIRECTORY)
 
     layout = [
         [
-            sg.Listbox(obrazky, size=(40, 30), key="-IMAGE LIST-", enable_events=True),
             sg.Column([
+                [sg.Button("Analýzy", size=(14, 2))],
                 [sg.Button("Predikcie", size=(14, 2))],
                 [sg.Button("Ukoncit", size=(14, 2))]
-            ], element_justification='c')
+            ], justification='center', pad=(0, (110, 0)), expand_y=True)
         ]
     ]
 
     # Vytvorenie okna
-    window = sg.Window("Prehliadač Obrázkov", layout, finalize=True)
-    last_click_time = None
-    last_click_row = None
+    window = sg.Window("Názov okna", layout, size=(600, 400))
 
     while True:
         event, values = window.read()
+
+        if event == "Analýzy":
+            window.close()
+            analysis_page()
+            break
 
         if event == sg.WINDOW_CLOSED or event == "Ukoncit":
             break
@@ -36,17 +41,6 @@ def analysis_list():
             show_analysis()
             break
 
-
-        elif event == "-IMAGE LIST-":
-            current_time = time.time()
-            current_row = values["-IMAGE LIST-"][0]
-            if last_click_time is not None and current_row == last_click_row and current_time - last_click_time < 0.5:
-                print(current_row)
-                window.close()
-                show_analysis(current_row)
-                break
-            last_click_time = current_time
-            last_click_row = current_row
 
     # Zatvorenie okna
     window.close()
@@ -77,7 +71,7 @@ def show_analysis(selected_image):
 
         if event == "Naspäť":
             window.close()
-            analysis_list()
+            home_page()
             break
 
         with Image.open(image_path) as img:
@@ -94,26 +88,66 @@ def show_analysis(selected_image):
 
         window.close()
 
-        """
-        elif event.startswith("Načítať Obrázok"):
-            try:
-                # Získanie indexu vybraného obrázka
-                index_obrazka = int(event.split()[-1]) - 1
+def analysis_page():
+    layout = [
+        [
+            sg.Column([
+                [sg.Button("Vykreslenie cien vnútrodenného trhu", size=(30, 3))],
+                [sg.Button("Vykreslenie cien denného trhu", size=(30, 3))],
+                [sg.Button("Vykreslenie cien vnútrodenného trhu s 15 minútovou periódou", size=(30, 3))]
+            ], justification='center', pad=(0, (100, 0)), expand_y=True)
+        ]
+    ]
 
-                # Načítanie obrázka
-                cesta_obrazka = cesty_obrazkov[index_obrazka]
+    # Vytvorenie okna
+    window = sg.Window("Analýzy", size=(600, 400), layout=layout, finalize=True)
 
-                with Image.open(cesta_obrazka) as img:
-                    # Zmenšenie obrázka na maximálne rozmery 800x600
-                    img.thumbnail((max_width, max_height))
+    while True:
+        event, values = window.read()
 
-                # Aktualizácia oblasti pre zobrazenie obrázka
-                window["-IMAGE-"].update(filename=cesta_obrazka)
+        if event == "Vykreslenie cien vnútrodenného trhu":
+            window.close()
+            vykreslenie_cien()
+            break
 
-            except IndexError:
-                sg.popup_error("Neplatný index obrázka. Prosím, vyberte platný obrázok.")
-        """
+        if event == sg.WINDOW_CLOSED:
+            break
 
-# Volanie metódy analyza_zobrazenie()
-#analyza_zobrazenie()
-analysis_list()
+        if event == "Naspäť":
+            window.close()
+            home_page()
+            break
+
+        window.close()
+
+def vykreslenie_cien():
+    layout = [
+        #[sg.Text("Dátum od:"), sg.CalendarButton("Vybrať dátum od", key="od", format="%Y-%m-%d")],
+        [sg.Input(readonly=True, enable_events=True, key='INPUT 1'),
+         sg.CalendarButton('Dátum od', close_when_date_chosen=True, format='%Y-%m-%d', key='Calendar 1')],
+        [sg.Input(readonly=True, enable_events=True, key='INPUT 2'),
+         sg.CalendarButton('Dátum do', close_when_date_chosen=True, format='%Y-%m-%d', key='Calendar 2')],
+        [sg.Button("Vykresliť", size=(40, 2))],
+    ]
+
+    window = sg.Window("Vykreslovanie cien", size=(600, 400), layout=layout)
+
+    while True:
+        event, values = window.read()
+
+
+        if event == sg.WINDOW_CLOSED:
+            break
+
+        if event == "Vykresliť":
+            break
+
+        if event == 'INPUT 1':
+            print(f'{values[event]}')
+
+        if event == 'INPUT 2':
+            print(f'{values[event]}')
+
+    window.close()
+
+home_page()

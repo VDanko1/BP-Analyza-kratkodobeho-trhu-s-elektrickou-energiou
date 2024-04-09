@@ -1,5 +1,8 @@
 import itertools
 import pickle
+import time
+import PySimpleGUI as sg
+import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -18,6 +21,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pickle
+from statsmodels.tsa.holtwinters import ExponentialSmoothing
 import warnings
 from sklearn.metrics import mean_squared_error
 import pandas as pd
@@ -321,10 +325,6 @@ def ArimaModel():
         predictions = model_fit.forecast(steps=len(test_data))
         predictions_df = pd.DataFrame(predictions, index=test_data.index, columns=['Predicted'])
 
-        print(predictions_df.head())
-        print(train_data)
-        #print(test_data)
-        """
         # Predikcia na testovacích dátach
         predictions = model_fit.forecast(steps=len(test_data))
         predictions_df = pd.DataFrame(predictions, index=test_data.index, columns=['Predicted'])
@@ -339,7 +339,60 @@ def ArimaModel():
         print(f"MSE for fold: {mse:.2f}")
 
         print("Priemerne MSE " + str(total_mse/n_splits))
-        """
 
 
-ArimaModel()
+def plot_predictions(train_data, test_data, predictions):
+    plt.figure(figsize=(10, 6))
+    #plt.plot(train_data.index, train_data['price'], label='Train', color='blue')
+    plt.plot(test_data.index, test_data['price'], label='Test', color='green')
+    plt.plot(test_data.index, predictions, label='Predictions', color='red')
+    plt.xlabel('Date')
+    plt.ylabel('Price')
+    plt.title('ETS Predictions vs Actual')
+    plt.legend()
+    plt.show()
+
+def ETSModel():
+    merged_df = data_preparing()
+
+    # Počet skladieb pre TimeSeriesSplit
+    n_splits = 25
+    tscv = TimeSeriesSplit(n_splits=n_splits)
+
+    total_mse = 0
+    i = 0
+
+    for train_index, test_index in tscv.split(merged_df):
+        # Rozdelenie dát na trénovaciu a testovaciu sadu
+        train_data = merged_df.iloc[train_index]
+        test_data = merged_df.iloc[test_index]
+        warnings.filterwarnings("ignore")
+
+        # Natrénovanie ETS modelu
+        model = ExponentialSmoothing(train_data['price_diff'], trend='add', seasonal='add', seasonal_periods=24)
+        model_fit = model.fit()
+
+        # Predikcia na testovacích dátach
+        predictions_diff = model_fit.forecast(steps=len(test_data))
+
+        # Spätná transformácia diferencovaných predikcií na pôvodné hodnoty
+        last_price = train_data['price'].iloc[-1]  # Posledná známa hodnota
+        predictions = pd.Series(predictions_diff, index=test_data.index).cumsum() + last_price
+
+        #print(predictions.tail())
+
+        mse = mean_squared_error(test_data['price'],predictions)
+        total_mse += mse
+        print(f"MSE for fold: {mse:.2f}")
+
+        if i % 10 == 0:  # Kontrola, či je i delitelné 10
+            plot_predictions(train_data, test_data, predictions)
+        i += 1  # Inkrementácia i
+
+        time.sleep(0.5)
+
+        # Priemerne MSE cez všetky testovacie sady
+    avg_mse = total_mse / n_splits
+    print(f"Average MSE across all folds: {avg_mse:.2f}")
+
+ETSModel()

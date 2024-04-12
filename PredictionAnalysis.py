@@ -9,6 +9,8 @@ from statsmodels.tsa.stattools import adfuller
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.stl._stl import STL
 import scipy.stats as stats
+from datetime import datetime
+import time
 import matplotlib.pyplot as plt
 import pickle
 from scipy.stats import boxcox
@@ -71,30 +73,96 @@ def AdFullerTestDAM():
         print('Null hypothesis (inability to reject the unit root) is rejected, the time series is stationary.')
     else:
         print('Null hypothesis (inability to reject the unit root) is not rejected, the time series is non-stationary.')
+def merging_data_and_preparation_IDM15(market_type, date_from, date_to):
+    with open(f"Data/{market_type}_results_2024-JAN-APR.pkl", "rb") as file_dam:
+        data_dam_2024 = pickle.load(file_dam)
 
+    with open(f"Data/{market_type}_results_2023.pkl", "rb") as file_dam:
+        data_dam_2023 = pickle.load(file_dam)
 
-def Histrogram():
-    with open("Data/DAM_results_2023.pkl", "rb") as file_dam:
-        data_dam = pickle.load(file_dam)
+    date_from = datetime.strptime(date_from, "%Y-%m-%d")
+    date_to = datetime.strptime(date_to, "%Y-%m-%d")
 
-    # Vytvorenie DataFrame z vašich dát
-    df_dam = pd.DataFrame(data_dam)
+    df_dam2024 = pd.DataFrame(data_dam_2024)
+    df_dam2023 = pd.DataFrame(data_dam_2023)
 
-    # Aplikácia sezónnej diferenciácie na stĺpec 'priceWeightedAverage'
-    seasonal_diff_price = df_dam['price'].diff()
+    for df in [df_dam2024, df_dam2023]:
+        df['deliveryEnd'] = pd.to_datetime(df['deliveryEnd']).dt.tz_localize(None)
 
-    # Odstránenie riadkov s chýbajúcimi hodnotami
-    seasonal_diff_price = seasonal_diff_price.dropna()
+    if market_type == "IDM15":
+        for df in [df_dam2024, df_dam2023]:
+            df.rename(columns={'priceWeightedAverage': 'price'}, inplace=True)
 
-    # Vykreslenie histogramu sezónnej diferencie
+    df_dam2024 = df_dam2024[['deliveryEnd', 'price']]
+    df_dam2023 = df_dam2023[['deliveryEnd', 'price']]
+
+    for df in [df_dam2024, df_dam2023]:
+        df['price'] = pd.to_numeric(df['price'], errors='coerce')
+
+    merged_df = pd.concat([df_dam2023, df_dam2024])
+    merged_df = merged_df[(merged_df['deliveryEnd'] >= date_from) & (merged_df['deliveryEnd'] <= date_to)]
+    return merged_df
+
+def merging_data_and_preparation_dam_idm(market_type, date_from, date_to):
+    with open(f"Data/{market_type}_results_2024-JAN-APR.pkl", "rb") as file_dam:
+        data_dam_2024 = pickle.load(file_dam)
+
+    with open(f"Data/{market_type}_results_2023.pkl", "rb") as file_dam:
+        data_dam_2023 = pickle.load(file_dam)
+
+    with open(f"Data/{market_type}_results_2022.pkl", "rb") as file_dam:
+        data_dam2022 = pickle.load(file_dam)
+
+    with open(f"Data/{market_type}_results_2021.pkl", "rb") as file_dam:
+        data_dam2021 = pickle.load(file_dam)
+
+    with open(f"Data/{market_type}_results_2020.pkl", "rb") as file_dam:
+        data_dam2020 = pickle.load(file_dam)
+
+    date_from = datetime.strptime(date_from, "%Y-%m-%d")
+    date_to = datetime.strptime(date_to, "%Y-%m-%d")
+
+    df_dam2024 = pd.DataFrame(data_dam_2024)
+    df_dam2023 = pd.DataFrame(data_dam_2023)
+    df_dam2022 = pd.DataFrame(data_dam2022)
+    df_dam2021 = pd.DataFrame(data_dam2021)
+    df_dam2020 = pd.DataFrame(data_dam2020)
+
+    for df in [df_dam2024, df_dam2023, df_dam2022, df_dam2021, df_dam2020]:
+        df['deliveryEnd'] = pd.to_datetime(df['deliveryEnd']).dt.tz_localize(None)
+
+    if market_type == "IDM":
+        for df in [df_dam2024, df_dam2023, df_dam2022, df_dam2021, df_dam2020]:
+            df.rename(columns={'priceWeightedAverage': 'price'}, inplace=True)
+
+    df_dam2024 = df_dam2024[['deliveryEnd', 'price']]
+    df_dam2023 = df_dam2023[['deliveryEnd', 'price']]
+    df_dam2022 = df_dam2022[['deliveryEnd', 'price']]
+    df_dam2021 = df_dam2021[['deliveryEnd', 'price']]
+    df_dam2020 = df_dam2020[['deliveryEnd', 'price']]
+
+    for df in [df_dam2024, df_dam2023, df_dam2022, df_dam2021, df_dam2020]:
+        df['price'] = pd.to_numeric(df['price'], errors='coerce')
+
+    merged_df = pd.concat([df_dam2020, df_dam2021, df_dam2022, df_dam2023, df_dam2024])
+    merged_df = merged_df[(merged_df['deliveryEnd'] >= date_from) & (merged_df['deliveryEnd'] <= date_to)]
+    return merged_df
+
+def Histogram(market_type, date_from, date_to):
+    if (market_type == "IDM15"):
+        merged_df = merging_data_and_preparation_IDM15(market_type,date_from,date_to)
+    else:
+        merged_df = merging_data_and_preparation_dam_idm(market_type, date_from, date_to)
+
     plt.figure(figsize=(10, 6))
-    plt.hist(seasonal_diff_price, bins=20, color='skyblue', edgecolor='black')
-    plt.title('Histogram cien differencovane Slovenského denného trhu za rok 2023')
+    plt.hist(merged_df['price'], bins=15,color='skyblue', edgecolor='black')
+    plt.title('Histogram cien')
     plt.xlabel('Cena')
     plt.ylabel('Počet')
-    plt.grid(True)
+    plt.savefig("Graphs/Histogram_from_to")
     plt.show()
 
+#Histogram("DAM", "2022-01-01", "2024-04-01")
 
 def AdFullerTestIDM15():
     with open("Data/IDM_results_2023_15min.pkl", "rb") as file_dam:
@@ -182,7 +250,7 @@ def DecompositionOfTimeSeries():
 #DecompositionOfTimeSeries()
 
 def STLDecomposition():
-    with open("Data/DAM_results_2022.pkl", "rb") as file_dam:
+    with open("Data/DAM_results_2023.pkl", "rb") as file_dam:
         data_dam2023 = pickle.load(file_dam)
 
     with open("Data/DAM_results_2020.pkl", "rb") as file_dam:
@@ -258,69 +326,72 @@ def STLDecomposition():
     plt.tight_layout()
     plt.show()
 
+def ACF(market_type, date_from, date_to):
+    if (market_type == "IDM15"):
+        merged_df = merging_data_and_preparation_IDM15(market_type, date_from, date_to)
+    else:
+        merged_df = merging_data_and_preparation_dam_idm(market_type, date_from, date_to)
 
-def ACF_PACF():
-    with open("Data/IDM_results_2020.pkl", "rb") as file_dam:
-        data_dam = pickle.load(file_dam)
-
-    df_dam = pd.DataFrame(data_dam)
-
-    df_dam['deliveryEnd'] = pd.to_datetime(df_dam['deliveryEnd'])
-
-    df_dam = df_dam[['deliveryEnd', 'priceWeightedAverage']]
-
-    # Remove missing values if any
-    df_dam.dropna(inplace=True)
-
-    df_dam['diff_price'] = df_dam['priceWeightedAverage'].diff()
-
-    #plt.plot(df_dam['deliveryEnd'],df_dam['diff_price'])
-    #plt.plot(df_dam['deliveryEnd'],df_dam['priceWeightedAverage'])
-    #plt.figure(figsize=(20,6))
-
-    # Plot ACF and PACF
-    plot_acf(df_dam['priceWeightedAverage'], lags=24)
-    plt.title('ACF for IDM prices of 2022- granularity 1 hour')
+    plt.figure(figsize=(10, 6))
+    plot_acf(merged_df['price'], lags=24)
+    if (market_type == "IDM"):
+        plt.title(f'ACF graf pre ceny vnutrodenného trhu s 60 minútovou periódou - granularita 1 hodina', fontsize=8)
+    if (market_type == "DAM"):
+        plt.title(f'ACF graf pre ceny denného trhu - granularita 1 hodina', fontsize=8)
+    if (market_type == "IDM15"):
+        plt.title(f'ACF graf pre ceny vnutrodenného trhu s 15 minútovou periódou - granularita 1 hodina', fontsize=8)
     plt.xlabel('Lag')
-    plt.savefig("Graphs/ACF IDM 2020 lag 24")
+    plt.savefig("Graphs/ACF_from_to")
     plt.ylabel('ACF')
+    plt.show()
 
-    plot_pacf(df_dam['priceWeightedAverage'], lags=24)
-    plt.title('PACF for IDM prices of 2022 - granularity 1 hour')
+def PACF(market_type, date_from, date_to):
+    if market_type == "IDM15":
+        merged_df = merging_data_and_preparation_IDM15(market_type, date_from, date_to)
+    else:
+        merged_df = merging_data_and_preparation_dam_idm(market_type, date_from, date_to)
+
+    plt.figure(figsize=(10, 6))
+    plot_pacf(merged_df['price'], lags=24)
+    if (market_type == "IDM"):
+        plt.title(f'PACF graf pre ceny vnutrodenného trhu s 60 minútovou periódou - granularita 1 hodina', fontsize=8)
+    if (market_type == "DAM"):
+        plt.title(f'PACF graf pre ceny denného trhu - granularita 1 hodina', fontsize=8)
+    if (market_type == "IDM15"):
+        plt.title(f'PACF graf pre ceny vnutrodenného trhu s 15 minútovou periódou - granularita 1 hodina', fontsize=8)
     plt.xlabel('Lag')
-    plt.savefig("Graphs/PACF IDM 2020 lag 24")
+    plt.savefig("Graphs/PACF_from_to")
     plt.ylabel('PACF')
     plt.show()
 
 
-def qq_plot():
-    with open("Data/IDM_results_2023_15min.pkl", "rb") as file_dam:
-        data_dam = pickle.load(file_dam)
-
-        # Vytvorenie DataFrame z vašich dát
-    df_dam = pd.DataFrame(data_dam)
-
-    df_dam.dropna(subset=['priceAverage'], inplace=True)
-
-    prices = df_dam['priceAverage']
+def qq_plot(market_type, date_from, date_to):
+    if market_type == "IDM15":
+        merged_df = merging_data_and_preparation_IDM15(market_type, date_from, date_to)
+    else:
+        merged_df = merging_data_and_preparation_dam_idm(market_type, date_from, date_to)
 
     # Vytvorenie Q-Q grafu
-    plt.figure(figsize=(8, 6))
-    stats.probplot(prices, dist="norm", plot=plt)
-    plt.title('Q-Q Plot of IDM Prices with 15 minute period of year 2023 - granularity 1 hour')
+    plt.figure(figsize=(10, 6))
+    stats.probplot(merged_df['price'], dist="norm", plot=plt)
+    if (market_type == "IDM"):
+        plt.title(f'Q-Q graf pre ceny vnutrodenného trhu s 60 minútovou periódou - granularita 1 hodina', fontsize=12)
+    if (market_type == "DAM"):
+        plt.title(f'Q-Q graf pre ceny denného trhu - granularita 1 hodina', fontsize=12)
+    if (market_type == "IDM15"):
+        plt.title(f'Q-Q graf pre ceny vnutrodenného trhu s 15 minútovou periódou - granularita 1 hodina', fontsize=12)
+
     plt.xlabel('Theoretical quantiles')
     plt.ylabel('Ordered values')
     plt.grid(True)
-    #plt.savefig("Graphs/QQ Plot IDM(15) 2023")
+    plt.savefig("Graphs/QQ_plot_from_to")
     plt.show()
 
-
-
 # Zavolanie funkcie na vykreslenie Q-Q grafu
-#Histrogram()
-#qq_plot()
-#ACF_PACF()
+qq_plot("IDM","2023-01-01", "2024-01-01")
+#ACF("IDM","2023-01-01", "2024-01-01")
+#PACF("IDM","2023-01-01", "2024-01-01")
 #STLDecomposition()
 #AdFullerTestIDM15()
 #AdFullerTestDAM()
-DecompositionOfTimeSeries()
+#DecompositionOfTimeSeries()

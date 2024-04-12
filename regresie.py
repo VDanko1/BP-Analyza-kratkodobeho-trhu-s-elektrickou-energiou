@@ -156,8 +156,6 @@ def korelacia_denna():
         #plt.show()
 
         #print(f"Correlation between DAM price and IDM priceWeightedAverage (Hour {hour}): {correlation}")
-
-
         #print(f"Linear Regression Equation for Hour {hour}: IDM_Price = {fit[0]:.4f} * DAM_Price + {fit[1]:.4f}")
 
     plt.figure(figsize=(10, 6))

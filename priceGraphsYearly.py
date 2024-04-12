@@ -3,16 +3,22 @@ import pandas as pd
 import requests
 import matplotlib.pyplot as plt
 from datetime import datetime
+import plotly.express as px
+import plotly.graph_objects as go
+import plotly.io as pio
+import kaleido
 import numpy as np
+import io
+
 
 
 def load_and_store_data_okte():
-    api_url = "https://isot.okte.sk/api/v1/dam/results?deliveryDayFrom=2024-01-01&deliveryDayTo=2024-04-01"
+    api_url = "https://isot.okte.sk/api/v1/idm/results?deliveryDayFrom=2024-01-01&deliveryDayTo=2024-04-01&productType=15"
 
     response = requests.get(api_url)
 
     if response.status_code == 200:
-        filename = "Data/DAM_results_2024-JAN-APR.pkl"
+        filename = "Data/IDM15_results_2024-JAN-APR.pkl"
         with open(filename, "wb") as file:
             pickle.dump(response.json(), file)
     else:
@@ -53,17 +59,106 @@ def load_and_store_data_oil():
     else:
         print(f"Error: {response.status_code}")
 
-def print_data ():
-    import pickle
+def prices_from_to(market_type, date_from, date_to):
+    with open(f"Data/{market_type}_results_2024-JAN-APR.pkl", "rb") as file_dam:
+        data_dam_2024 = pickle.load(file_dam)
 
-    # Load the pickled data
-    filename = "Data/Oil_price_2021"
-    with open(filename, "rb") as file:
-        oil_price_data = pickle.load(file)
+    with open(f"Data/{market_type}_results_2023.pkl", "rb") as file_dam:
+        data_dam_2023 = pickle.load(file_dam)
 
-    # Now you can work with the 'oil_price_data' variable, which contains the loaded data
-    print(oil_price_data)
+    with open(f"Data/{market_type}_results_2022.pkl", "rb") as file_dam:
+        data_dam2022 = pickle.load(file_dam)
 
+    with open(f"Data/{market_type}_results_2021.pkl", "rb") as file_dam:
+        data_dam2021 = pickle.load(file_dam)
+
+    with open(f"Data/{market_type}_results_2020.pkl", "rb") as file_dam:
+        data_dam2020 = pickle.load(file_dam)
+
+    date_from = datetime.strptime(date_from, "%Y-%m-%d")
+    date_to = datetime.strptime(date_to, "%Y-%m-%d")
+
+    df_dam2024 = pd.DataFrame(data_dam_2024)
+    df_dam2023 = pd.DataFrame(data_dam_2023)
+    df_dam2022 = pd.DataFrame(data_dam2022)
+    df_dam2021 = pd.DataFrame(data_dam2021)
+    df_dam2020 = pd.DataFrame(data_dam2020)
+
+    for df in [df_dam2024, df_dam2023, df_dam2022, df_dam2021, df_dam2020]:
+        df['deliveryEnd'] = pd.to_datetime(df['deliveryEnd']).dt.tz_localize(None)
+
+    if market_type == "IDM":
+        for df in [df_dam2024, df_dam2023, df_dam2022, df_dam2021, df_dam2020]:
+            df.rename(columns={'priceWeightedAverage': 'price'}, inplace=True)
+
+    df_dam2024 = df_dam2024[['deliveryEnd', 'price']]
+    df_dam2023 = df_dam2023[['deliveryEnd', 'price']]
+    df_dam2022 = df_dam2022[['deliveryEnd', 'price']]
+    df_dam2021 = df_dam2021[['deliveryEnd', 'price']]
+    df_dam2020 = df_dam2020[['deliveryEnd', 'price']]
+
+    for df in [df_dam2024, df_dam2023, df_dam2022, df_dam2021, df_dam2020]:
+        df['price'] = pd.to_numeric(df['price'], errors='coerce')
+
+    merged_df = pd.concat([df_dam2020, df_dam2021, df_dam2022, df_dam2023, df_dam2024])
+    merged_df = merged_df[(merged_df['deliveryEnd'] >= date_from) & (merged_df['deliveryEnd'] <= date_to)]
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(merged_df['deliveryEnd'], merged_df['price'], linestyle='-', color='b')
+
+    if (market_type == "IDM"):
+        plt.title(f'Vývoj cien vnútrodenného trhu s 60 minútovou periódou', fontsize=16)
+    if (market_type == "DAM"):
+        plt.title(f'Vývoj cien marketu denného trhu', fontsize=16)
+    if (market_type == "IDM15"):
+        plt.title(f'Vývoj cien marketu vnútrodenného trhu s 15 minútovou periódou', fontsize=16)
+
+    plt.xlabel('Dátum', fontsize=16)
+    plt.ylabel('Cena €/MWh', fontsize=16)
+    plt.tight_layout()
+    plt.savefig("Graphs/prices_from_to")
+    plt.show()
+
+
+def prices_from_to_IDM15(market_type, date_from, date_to):
+    with open(f"Data/{market_type}_results_2024-JAN-APR.pkl", "rb") as file_dam:
+        data_dam_2024 = pickle.load(file_dam)
+
+    with open(f"Data/{market_type}_results_2023.pkl", "rb") as file_dam:
+        data_dam_2023 = pickle.load(file_dam)
+
+    date_from = datetime.strptime(date_from, "%Y-%m-%d")
+    date_to = datetime.strptime(date_to, "%Y-%m-%d")
+
+    df_dam2024 = pd.DataFrame(data_dam_2024)
+    df_dam2023 = pd.DataFrame(data_dam_2023)
+
+    for df in [df_dam2024, df_dam2023]:
+        df['deliveryEnd'] = pd.to_datetime(df['deliveryEnd']).dt.tz_localize(None)
+
+    if market_type == "IDM15":
+        for df in [df_dam2024, df_dam2023]:
+            df.rename(columns={'priceWeightedAverage': 'price'}, inplace=True)
+
+    df_dam2024 = df_dam2024[['deliveryEnd', 'price']]
+    df_dam2023 = df_dam2023[['deliveryEnd', 'price']]
+
+
+    for df in [df_dam2024, df_dam2023]:
+        df['price'] = pd.to_numeric(df['price'], errors='coerce')
+
+    merged_df = pd.concat([df_dam2023, df_dam2024])
+    merged_df = merged_df[(merged_df['deliveryEnd'] >= date_from) & (merged_df['deliveryEnd'] <= date_to)]
+
+    # Create the plot with two lines
+    plt.figure(figsize=(10, 6))
+    plt.plot(merged_df['deliveryEnd'], merged_df['price'], linestyle='-', color='b')
+
+    plt.title(f'Vývoj cien marketu vnútrodenného trhu s 15 minútovou periódou', fontsize=16)
+    plt.xlabel('Dátum', fontsize=16)
+    plt.ylabel('Cena €/MWh', fontsize=16)
+    plt.tight_layout()
+    plt.savefig("Graphs/prices_from_to")
 
 def visualize_av_prices_overlay():
     try:
@@ -127,7 +222,6 @@ def visualize_av_prices_overlay():
         price_dam3 = [entry['price'] for entry in data_dam3]
         price_dam4 = [entry['price'] for entry in data_dam4]
 
-
         #dates_dam = [datetime.strptime(date, '%Y-%m-%d') for date in date_idm]
         dates_idm = [datetime.strptime(date, '%Y-%m-%d') for date in date_dam]
 
@@ -155,7 +249,9 @@ def visualize_av_prices_overlay():
 
 # visualize_av_prices_two_years("IDM_results_2020.pkl", "IDM_results_2021.pkl")
 #visualize_av_prices_overlay("Data/IDM_results_2021.pkl", "Data/Oil_price_2021")
-load_and_store_data_okte()
+#load_and_store_data_okte()
+prices_from_to("DAM", "2023-12-01", "2024-02-01")
+#data_preparing2("DAM")#, "2023-01-01", "2023-02-01")
 #visualize_av_prices_overlay()
 #load_and_store_data_borrowed()
 #load_and_store_data_oil()

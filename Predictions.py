@@ -6,6 +6,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import requests
 from scipy.special import inv_boxcox
 from sklearn.preprocessing import PowerTransformer
 from statsmodels.tsa.stattools import acf, pacf
@@ -33,6 +34,7 @@ from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.stl._stl import STL
 import scipy.stats as stats
 import matplotlib.pyplot as plt
+import datetime
 import pickle
 from scipy.stats import boxcox
 import matplotlib.pyplot as plt
@@ -42,106 +44,110 @@ from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from scipy.stats import bartlett
 
 
-def SarimaModel():
-    df_dam = data_preparing()
+def SarimaNaTvrdo(number_of_days_to_predict, market_type):
 
-    train_df = df_dam.iloc[:-23, :]
-    test_size = df_dam.iloc[-31:, :]
+    df_dam = data_preparing(market_type)
 
-    model = pmd.auto_arima(train_df['boxcox_seasonal_diff_price'], start_p=1, start_q=1, m=24, seasonal=True,
-                           trace=True, stepwise=True, max_time=50,
-                           d=1, D=1, )
-
-    predikcie = model.predict(n_periods=len(test_size))
-
-    print(predikcie)
-
-
-def SarimaNaTvrdo():
-    df_dam, lambda_value = data_preparing()
-    print(lambda_value)
-    print(df_dam.columns)
-
-    train_df = df_dam.iloc[:-48, :]  # Trénovacia množina obsahuje všetky údaje až po posledných 720 hodinách
-    test_size = df_dam.iloc[-48:, :]  # Testovacia množina zahŕňa posledných 720 hodín
-
-    model = pmd.auto_arima(train_df['price'], start_p=1, start_q=0, max_p=1, max_q=0,
+    model = pmd.auto_arima(df_dam['price'], start_p=1, start_q=0, max_p=1, max_q=0,
                            start_P=2, start_Q=0, max_P=2, max_Q=0, m=24, seasonal=True,
                            trace=True, stepwise=False, max_time=50,
                            d=1, D=1, suppress_warnings=True)
 
-    predikcie_original = model.predict(n_periods=len(test_size))
+    predikcie_original = model.predict(number_of_days_to_predict)
 
-    print(predikcie_original)
-    plt.figure(figsize=(10, 6))
-    plt.plot(test_size.index, test_size['price'], label='Testovací set', color='blue')
-    # Vykreslenie grafu s predikciami
-    plt.plot(test_size.index, predikcie_original, label='Predikcie', color='red')
-    plt.title('Porovnanie predikcií s testovacím setom')
+    predikcie_df = pd.DataFrame({
+        'deliveryEnd': predikcie_original.index,
+        'price': predikcie_original.values
+    })
+
+    predikcie_df['deliveryEnd'] = pd.to_datetime(predikcie_df['deliveryEnd'])
+    predikcie_df['deliveryEnd'] = predikcie_df['deliveryEnd'].dt.strftime('%Y-%m-%d %H:%M')
+
+    print(predikcie_df)
+
+    plt.figure(figsize=(12, 9))  # Zväčšenie veľkosti grafu
+    plt.plot(predikcie_df['deliveryEnd'], predikcie_df['price'], label='Predikcie', color='blue')
+    plt.title('Predikcie cien modelu SARIMA')
     plt.xlabel('Dátum')
-    plt.ylabel('Rozdiel ceny')
+    plt.ylabel('Cena €/MWh')
+
+    if number_of_days_to_predict <= 48:
+        n = 6
+
+    if number_of_days_to_predict >= 48:
+        n = 10
+
+    if number_of_days_to_predict >= 120:
+        n = 15
+
+    plt.xticks(predikcie_df['deliveryEnd'][::n], rotation=20)
     plt.legend()
     plt.show()
 
+def sarimaPredikcie(number_of_days_to_predict):
+    df_dam = data_preparing()
+
+    train_df = df_dam.iloc[:-24, :]  # Trénovacia množina obsahuje všetky údaje až po posledných 720 hodinách
+    test_size = df_dam.iloc[-24:, :]  # Testovacia množina zahŕňa posledných 720 hodín
+
+    model = pmd.auto_arima(df_dam['price'], start_p=1, start_q=0, max_p=1, max_q=0,
+                           start_P=2, start_Q=0, max_P=2, max_Q=0, m=24, seasonal=True,
+                           trace=True, stepwise=False, max_time=50,
+                           d=1, D=1, suppress_warnings=True)
+
+    predikcie_original = model.predict(n_periods=number_of_days_to_predict)
+
+    predikcie_df = pd.DataFrame({
+        'deliveryEnd': predikcie_original.index,  # Prvý stĺpec bude dátumy
+        'price': predikcie_original.values  # Druhý stĺpec bude ceny
+    })
+
     print(predikcie_original)
 
+    plt.figure(figsize=(12, 9))  # Zväčšenie veľkosti grafu
+    plt.plot(predikcie_df['deliveryEnd'], predikcie_df['price'], label='Predikované ceny', color='red')
+    plt.title('Predikované ceny - model SARIMA', fontsize=16)
+    plt.xlabel('Dátum', fontsize=14)
+    plt.ylabel('Cena €/MWh', fontsize=14)
+    plt.legend()
+    plt.show()
 
-def data_preparing():
-    # with open("Data/DAM_results_2023.pkl", "rb") as file_dam:
-    #    data_dam_2023 = pickle.load(file_dam)
+    # Formátovanie dátumov na x-ovej osi
+    # n = 4  # Každý n-tý dátum sa zobrazí
+    # formatted_dates = pd.to_datetime(predikcie_df['deliveryEnd'][::n]).strftime('%Y-%m-%d %H:%M:%S')
+    # plt.xticks(predikcie_df['deliveryEnd'][::n], formatted_dates, rotation=20)
 
-    with open("Data/DAM_results_2024-JAN-APR.pkl", "rb") as file_dam:
-        data_dam_2024 = pickle.load(file_dam)
+def data_preparing(market_type):
+    today = datetime.date.today()
 
-    # df_dam2023 = pd.DataFrame(data_dam_2023)
-    df_dam2024 = pd.DataFrame(data_dam_2024)
+    if market_type == "DAM":
+        api_url = f"https://isot.okte.sk/api/v1/dam/results?deliveryDayFrom=2024-01-01&deliveryDayTo={today}"
+    elif market_type == "IDM":
+        api_url = f"https://isot.okte.sk/api/v1/idm/results?deliveryDayFrom=2024-01-01&deliveryDayTo={today}&productType=60"
 
-    # df_dam2023['deliveryStart'] = pd.to_datetime(df_dam2023['deliveryStart'])
-    df_dam2024['deliveryStart'] = pd.to_datetime(df_dam2024['deliveryStart'])
+    response = requests.get(api_url)
+    data = response.json()
 
-    # df_dam2023 = df_dam2023[['deliveryEnd', 'price']]
-    df_dam2024 = df_dam2024[['deliveryEnd', 'price']]
+    response_df = pd.DataFrame(data)
 
-    # df_dam2023.set_index('deliveryEnd', inplace=True)
-    df_dam2024.set_index('deliveryEnd', inplace=True)
+    response_df['deliveryEnd'] = pd.to_datetime(response_df['deliveryEnd'])
 
-    # df_dam2023.index.freq = 'H'
-    df_dam2024.index.freq = 'H'
+    if market_type == "IDM":
+        response_df.rename(columns={'priceWeightedAverage': 'price'}, inplace=True)
 
-    # df_dam2023['price'] = pd.to_numeric(df_dam2023['price'], errors='coerce')
-    df_dam2024['price'] = pd.to_numeric(df_dam2024['price'], errors='coerce')
+    response_df = response_df[['deliveryEnd', 'price']]
 
-    # df_dam2023.dropna(inplace=True)
-    df_dam2024.dropna(inplace=True)
+    response_df.set_index('deliveryEnd', inplace=True)
 
-    # df_dam2023['price_diff'] = df_dam2023['price'].diff()
-    df_dam2024['price_diff'] = df_dam2024['price'].diff()
+    response_df['price'] = pd.to_numeric(response_df['price'], errors='coerce')
 
-    # transformed_price1, lambda_value1 = yeojohnson(df_dam2023['price'])
-    pt = PowerTransformer(method='yeo-johnson', standardize=False)
+    response_df.dropna(inplace=True)
 
-    transformed_price = pt.fit_transform(df_dam2024[['price']])
-
-    # Priradenie transformovaných hodnôt späť do DataFrame df_dam2024
-    df_dam2024['yeo_johnson_price'] = transformed_price
-
-    # Získanie hodnoty lambda z transformátora pt
-    lambda_value = pt.lambdas_
-
-    # df_dam2023['boxcox_seasonal_diff_price'] = df_dam2023['boxcox_price'].diff(periods=24)
-    # df_dam2024['boxcox_seasonal_diff_price'] = df_dam2024['boxcox_price'].diff(periods=24)
-
-    # merged_df = pd.concat([df_dam2023, df_dam2024])
-    # merged_df.dropna(inplace=True)
-    df_dam2024.dropna(inplace=True)
-
-    return df_dam2024, lambda_value
+    return response_df
 
 
-SarimaNaTvrdo()
+SarimaNaTvrdo(48, "DAM")
 
-
-# data_preparing()
 
 def preparingData():
     with open("Data/DAM_results_2023.pkl", "rb") as file_dam:
@@ -270,46 +276,6 @@ def SarimaModelWithoutGrid():
     plt.legend()
     plt.show()
     """
-
-
-def ArimaModel():
-    merged_df = data_preparing()
-
-    # stepwise_fit = auto_arima(merged_df['price_diff'], trace=True, suppress_warnings=True)
-    # print(stepwise_fit.summary())
-
-    n_splits = 5
-    tscv = TimeSeriesSplit(n_splits=n_splits)
-
-    total_mse = 0
-
-    for train_index, test_index in tscv.split(merged_df):
-        warnings.filterwarnings("ignore")
-
-        train_data = merged_df.iloc[train_index]
-        test_data = merged_df.iloc[test_index]
-
-        # Natrénovanie modelu ARIMA
-        model = ARIMA(train_data['price_diff'], order=(2, 1, 2))
-        model_fit = model.fit()
-
-        predictions = model_fit.forecast(steps=len(test_data))
-        predictions_df = pd.DataFrame(predictions, index=test_data.index, columns=['Predicted'])
-
-        # Predikcia na testovacích dátach
-        predictions = model_fit.forecast(steps=len(test_data))
-        predictions_df = pd.DataFrame(predictions, index=test_data.index, columns=['Predicted'])
-        # predictions_df.dropna(inplace=True)
-        print(predictions.head())
-        print(predictions_df.head())
-        # inverzna transformacia
-        predictions_df['Predicted_original'] = merged_df['price'].iloc[0] + predictions_df['Predicted'].cumsum()
-
-        mse = mean_squared_error(test_data['price'], predictions_df['Predicted_original'])
-        total_mse += mse
-        print(f"MSE for fold: {mse:.2f}")
-
-        print("Priemerne MSE " + str(total_mse / n_splits))
 
 
 def plot_predictions(train_data, test_data, predictions):

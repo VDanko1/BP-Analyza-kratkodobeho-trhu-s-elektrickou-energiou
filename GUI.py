@@ -7,9 +7,7 @@ from PIL import Image
 import time
 import priceGraphsYearly as pgy
 import PredictionAnalysis as pal
-
-date_from = "som kokot"
-date_to = "som kokot"
+import Predictions as pred
 
 
 def home_page():
@@ -20,12 +18,12 @@ def home_page():
                 [sg.Button("Analýzy", size=(14, 2))],
                 [sg.Button("Predikcie", size=(14, 2))],
                 [sg.Button("Ukoncit", size=(14, 2))]
-            ], justification='center', pad=(0, (110, 0)), expand_y=True,background_color=layout_color)
+            ], justification='center', pad=(0, (110, 0)), expand_y=True, background_color=layout_color)
         ]
     ]
 
     # Vytvorenie okna
-    window = sg.Window("Názov okna", layout, size=(600, 400),background_color=layout_color)
+    window = sg.Window("Názov okna", layout, size=(600, 400), background_color=layout_color)
 
     while True:
         event, values = window.read()
@@ -40,139 +38,85 @@ def home_page():
 
         if event == "Predikcie":
             window.close()
-            vyber_datumov("DAM")
+            predictions_visualization()
             break
 
     # Zatvorenie okna
     window.close()
 
-
-def predictions_visualization(selected_image):
-
+def predictions_visualization():
     layout = [
-        [sg.Button("Naspäť", size=(14, 2))],
-        [sg.Image(key="-IMAGE-", size=(500, 500))]
+        [sg.Button("Naspäť", size=(30, 2)), sg.Button("Predikuj", size=(30, 2))],
+        [sg.Combo(["1 deň", "2 dni", "3 dni", "4 dni", "5 dní", "6 dní", "7 dní"],enable_events=True ,size=(20, 6),
+                  key='-COMBO-'),
+         sg.Combo(["Predikcie denného trhu", "Predikcie vnútrodenného trhu"],enable_events=True, size=(20, 6), key='-COMBO-2-')],
+        [sg.Image(key="-IMAGE-", size=(1000, 600), background_color="white"), sg.Multiline(size=(40, 37), key='-MULTILINE-')]
     ]
 
-    # Vytvorenie okna
-    window = sg.Window("Prehliadač Obrázkov", layout, finalize=True)
+    predictions_market = "DAM"
+    number_of_days_to_predict = 24
+    layout_color = '#1045B0'
+
+    window = sg.Window("Predikcie cien", size=(1400, 750), layout=layout, background_color=layout_color)
 
     while True:
         event, values = window.read()
-
-        window.close()
-
-"""
-def analysis_page():
-    layout = [
-        [
-            sg.Column([
-                [sg.Button("Vykreslenie cien denného trhu", size=(30, 3))],
-                [sg.Button("Vykreslenie cien vnútrodenného trhu", size=(30, 3))],
-                [sg.Button("Vykreslenie cien vnútrodenného trhu s 15 minútovou periódou", size=(30, 3))],
-                [sg.Button("Naspäť", size=(30, 3))]
-            ], justification='center', pad=(0, (50, 0)), expand_y=True),
-            sg.Column([
-                [sg.Button("ACF", size=(30, 3))],
-                [sg.Button("PACF", size=(30, 3))],
-                [sg.Button("Histogram", size=(30, 3))]
-            ], justification='center', pad=(0, (50, 0)), expand_y=True)
-        ]
-    ]
-
-    # Vytvorenie okna
-    window = sg.Window("Vykreslovanie analýz", size=(600, 400), layout=layout, finalize=True)
-
-    while True:
-        event, values = window.read()
-
-        if event == "Vykreslenie cien denného trhu":
-            window.close()
-            vyber_datumov("DAM")
-            break
-
-        if event == "Vykreslenie cien vnútrodenného trhu":
-            window.close()
-            vyber_datumov("IDM")
-            break
-
-        if event == "Vykreslenie cien vnútrodenného trhu s 15 minútovou periódou":
-            window.close()
-            vyber_datumov("IDM15")
-            break
-
-        if event == sg.WINDOW_CLOSED:
-            break
 
         if event == "Naspäť":
             window.close()
             home_page()
             break
 
-        window.close()
+        if event == '-COMBO-':
+            if values[event] == "1 deň":
+                number_of_days_to_predict = number_of_days_to_predict * 1
+                print(number_of_days_to_predict)
+                continue
+            elif values[event] == "2 dni":
+                number_of_days_to_predict = 2 * number_of_days_to_predict
+                print(number_of_days_to_predict)
+                continue
+            elif values[event] == "3 dni":
+                number_of_days_to_predict = 3 * number_of_days_to_predict
+                print(number_of_days_to_predict)
+                continue
+            elif values[event] == "4 dni":
+                number_of_days_to_predict = 4 * number_of_days_to_predict
+                print(number_of_days_to_predict)
+                continue
+            elif values[event] == "5 dní":
+                number_of_days_to_predict = 5 * number_of_days_to_predict
+                print(number_of_days_to_predict)
+                continue
+            elif values[event] == "6 dní":
+                number_of_days_to_predict = 6 * number_of_days_to_predict
+                print(number_of_days_to_predict)
+                continue
+            elif values[event] == "7 dní":
+                number_of_days_to_predict = 7 * number_of_days_to_predict
+                print(number_of_days_to_predict)
+                continue
 
-"""
-def vyber_datumov(typ_marketu):
-    layout = [
-        [sg.Input(readonly=True, enable_events=True, key='INPUT 1'),
-         sg.CalendarButton('Dátum od', close_when_date_chosen=True, format='%Y-%m-%d', key='Calendar 1')],
-        [sg.Input(readonly=True, disabled=True, enable_events=True, key='INPUT 2'),
-         sg.CalendarButton('Dátum do', close_when_date_chosen=True, format='%Y-%m-%d', key='Calendar 2')],
-        [sg.Button("Vykresliť", size=(39, 2))],
-        [sg.Button("Naspäť", size=(39, 2))]
+        if event == "-COMBO-2-":
+            if values[event] == "Predikcie denného trhu":
+                predictions_market = "DAM"
+                print(predictions_market)
+                continue
+            if values[event] == "Predikcie vnútrodenného trhu":
+                predictions_market = "IDM"
+                print(predictions_market)
+                continue
 
-    ]
-    layout_color = '#1045B0'
-    window = sg.Window("Vykreslovanie cien", size=(600, 400), layout=layout)
-    market_typ = typ_marketu
-    datum_odd = "2022-01-01"
-    datum_doo = "2023-01-01"
-
-    while True:
-        event, values = window.read()
+        if event == "Predikuj":
+            pred.SarimaNaTvrdo(predictions_market, number_of_days_to_predict)
+            image_path = "Graphs/ACF_from_to.png"
+            window["-IMAGE-"].update(filename=image_path)
+            continue
 
         if event == sg.WINDOW_CLOSED:
             break
 
-        if event == "Vykresliť":
-            window.close()
-            #vykreslovanie(market_typ, datum_odd, datum_doo)
-            break
-
-        if event == "Naspäť":
-            window.close()
-
-            break
-
-        if event == 'INPUT 1':
-            vybrany_datum_str = values[event]  # Predpokladám, že hodnota je reťazec (string)
-            print(vybrany_datum_str)
-            try:
-                vybrany_datum_od = datetime.datetime.strptime(vybrany_datum_str, '%Y-%m-%d')
-                datum_od = vybrany_datum_str
-                if datetime.datetime(2020, 1, 1) <= vybrany_datum_od <= datetime.datetime(2024, 4, 1):
-                    continue
-                else:
-                    sg.popup_error("Zadaný dátum musí byť medzi 1.1.2020 a 1.4.2024.")
-            except ValueError:
-                sg.popup_error("Nesprávny formát dátumu. Použite formát YYYY-MM-DD.")
-
-        if event == 'INPUT 2':
-            vybrany_datum_str = values[event]  # Predpokladám, že hodnota je reťazec (string)
-            try:
-                vybrany_datum_do = datetime.datetime.strptime(vybrany_datum_str, '%Y-%m-%d')
-                datum_do = vybrany_datum_str
-                if datetime.datetime(2020, 1, 1) <= vybrany_datum_do <= datetime.datetime(2024, 4, 1):
-                    if vybrany_datum_od <= vybrany_datum_do:
-                        continue
-                    else:
-                        sg.popup_error("Dátum od musí byť menší alebo rovný dátumu do.")
-                else:
-                    sg.popup_error("Zadaný dátum musí byť medzi 1.1.2020 a 1.4.2024.")
-            except ValueError:
-                sg.popup_error("Nesprávny formát dátumu. Použite formát YYYY-MM-DD.")
-
-    window.close()
+        window.close()
 
 def vykreslovanie_analyz():
     layout = [
@@ -190,12 +134,13 @@ def vykreslovanie_analyz():
                    'Q-Q graf vnútrodenného trhu (60 minútový)', 'Q-Q graf vnútrodenného trhu (15 minútový)',
                    'Q-Q graf denného trhu'],
                   enable_events=True, size=(45, 6), key='-COMBO-')],
-        [sg.Image(key="-IMAGE-", size=(1000, 600))],
+        [sg.Image(key="-IMAGE-", size=(1000, 600))]
     ]
 
     layout_color = '#1045B0'
 
     window = sg.Window("Vykreslovanie cien", size=(1200, 750), layout=layout, background_color=layout_color)
+
     typ_grafu = "DAM"
     datum_od = "2022-01-01"
     datum_do = "2023-01-01"
@@ -323,5 +268,6 @@ def vykreslovanie_analyz():
 
     window.close()
 
+
 home_page()
-#vykreslovanie()
+# vykreslovanie()

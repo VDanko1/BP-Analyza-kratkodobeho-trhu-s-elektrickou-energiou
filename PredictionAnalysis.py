@@ -1,17 +1,8 @@
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pickle
-import pandas as pd
 from scipy.stats import stats
 from statsmodels.tsa.stattools import adfuller
-from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.stl._stl import STL
 import scipy.stats as stats
 from datetime import datetime
-import time
-import matplotlib.pyplot as plt
 import pickle
 from scipy.stats import boxcox
 import matplotlib.pyplot as plt
@@ -41,7 +32,6 @@ def AdFullerTestDAM():
     print("Bartlettův test - Statistika:", bartlett_result.statistic)
     print("Bartlettův test - P-hodnota:", bartlett_result.pvalue)
 
-    # Interpretace výsledků
     if bartlett_result.pvalue < 0.05:
         print(
             "P-hodnota je nižší než 0.05, což naznačuje, že existují statisticky významné rozdíly ve variabilitě mezi skupinami dat.")
@@ -73,6 +63,7 @@ def AdFullerTestDAM():
         print('Null hypothesis (inability to reject the unit root) is rejected, the time series is stationary.')
     else:
         print('Null hypothesis (inability to reject the unit root) is not rejected, the time series is non-stationary.')
+
 def merging_data_and_preparation_IDM15(market_type, date_from, date_to):
     with open(f"Data/{market_type}_results_2024-JAN-APR.pkl", "rb") as file_dam:
         data_dam_2024 = pickle.load(file_dam)
@@ -162,7 +153,6 @@ def Histogram(market_type, date_from, date_to):
     plt.savefig("Graphs/Histogram_from_to")
     plt.show()
 
-#Histogram("DAM", "2022-01-01", "2024-04-01")
 
 def AdFullerTestIDM15():
     with open("Data/IDM_results_2023_15min.pkl", "rb") as file_dam:
@@ -246,8 +236,7 @@ def DecompositionOfTimeSeries():
     #plt.savefig("Graphs/Dekompozicia_DAM_2023_Additive")
     plt.show()
 
-# Spustenie funkcie pre dekompozíciu
-#DecompositionOfTimeSeries()
+
 
 def STLDecomposition():
     with open("Data/DAM_results_2023.pkl", "rb") as file_dam:
@@ -388,7 +377,7 @@ def qq_plot(market_type, date_from, date_to):
     plt.show()
 
 # Zavolanie funkcie na vykreslenie Q-Q grafu
-qq_plot("IDM","2023-01-01", "2024-01-01")
+#qq_plot("IDM","2023-01-01", "2024-01-01")
 #ACF("IDM","2023-01-01", "2024-01-01")
 #PACF("IDM","2023-01-01", "2024-01-01")
 #STLDecomposition()

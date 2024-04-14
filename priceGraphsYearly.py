@@ -11,7 +11,6 @@ import numpy as np
 import io
 
 
-
 def load_and_store_data_okte():
     api_url = "https://isot.okte.sk/api/v1/dam/results?deliveryDayFrom=2024-01-01&deliveryDayTo=2024-04-12"
 
@@ -23,6 +22,7 @@ def load_and_store_data_okte():
             pickle.dump(response.json(), file)
     else:
         print(f"Error: {response.status_code}")
+
 
 def load_and_store_data_borrowed():
     api_url = "https://markets.tradingeconomics.com/chart/eecxm:ind?span=1m&securify=new&url=/commodity/carbon&AUTH=K3G0OIIGcJ2ojK4wqITEnYx5jnqDefwNGP54u9Ty11T76niQsWqDvjhrbV%2Bmk0S0&ohlc=0"
@@ -36,17 +36,17 @@ def load_and_store_data_borrowed():
     else:
         print(f"Error: {response.status_code}")
 
+
 def load_and_store_data_oil():
     from_date_str = "2023-01-01"
     to_date_str = "2023-12-31"
 
-    api_url = f"https://api.oilpriceapi.com/v1/prices?past_week"#[from]={from_date_str}&by_period[to]={to_date_str}"
+    api_url = f"https://api.oilpriceapi.com/v1/prices?past_week"  # [from]={from_date_str}&by_period[to]={to_date_str}"
 
     headers = {
         'Authorization': 'Token c22a61b902e22643052cb26ad2b7c413',
         'Content-Type': 'application/json'
     }
-
 
     response = requests.get(api_url, headers=headers)
 
@@ -58,6 +58,7 @@ def load_and_store_data_oil():
 
     else:
         print(f"Error: {response.status_code}")
+
 
 def prices_from_to(market_type, date_from, date_to):
     with open(f"Data/{market_type}_results_2024-JAN-APR.pkl", "rb") as file_dam:
@@ -143,7 +144,6 @@ def prices_from_to_IDM15(market_type, date_from, date_to):
     df_dam2024 = df_dam2024[['deliveryEnd', 'price']]
     df_dam2023 = df_dam2023[['deliveryEnd', 'price']]
 
-
     for df in [df_dam2024, df_dam2023]:
         df['price'] = pd.to_numeric(df['price'], errors='coerce')
 
@@ -159,6 +159,7 @@ def prices_from_to_IDM15(market_type, date_from, date_to):
     plt.ylabel('Cena €/MWh', fontsize=16)
     plt.tight_layout()
     plt.savefig("Graphs/prices_from_to")
+
 
 def visualize_av_prices_overlay():
     try:
@@ -222,7 +223,7 @@ def visualize_av_prices_overlay():
         price_dam3 = [entry['price'] for entry in data_dam3]
         price_dam4 = [entry['price'] for entry in data_dam4]
 
-        #dates_dam = [datetime.strptime(date, '%Y-%m-%d') for date in date_idm]
+        # dates_dam = [datetime.strptime(date, '%Y-%m-%d') for date in date_idm]
         dates_idm = [datetime.strptime(date, '%Y-%m-%d') for date in date_dam]
 
         # Create the plot with two lines
@@ -232,9 +233,9 @@ def visualize_av_prices_overlay():
         plt.plot(price_dam3, linestyle='-', color='b', label='DAM prices of Christmas week of december 2023')
         plt.plot(price_dam4, linestyle='-', color='olive', label='DAM prices 4 week of december 2023')
 
-        plt.title('Weekly prices of december 2023 on DAM market - granularity 1 hour', fontsize = 16)
-        plt.xlabel('Period', fontsize = 16)
-        plt.ylabel('Price €/MWh', fontsize = 16)
+        plt.title('Weekly prices of december 2023 on DAM market - granularity 1 hour', fontsize=16)
+        plt.xlabel('Period', fontsize=16)
+        plt.ylabel('Price €/MWh', fontsize=16)
         plt.legend()
         plt.savefig("Vyvoj cien DAM za december 2023 (tyzdne) - final")
         plt.tight_layout()
@@ -246,16 +247,15 @@ def visualize_av_prices_overlay():
     except Exception as e:
         print(f"Error: {e}")
 
-
 # visualize_av_prices_two_years("IDM_results_2020.pkl", "IDM_results_2021.pkl")
-#visualize_av_prices_overlay("Data/IDM_results_2021.pkl", "Data/Oil_price_2021")
-load_and_store_data_okte()
-#prices_from_to("DAM", "2023-12-01", "2024-02-01")
-#data_preparing2("DAM")#, "2023-01-01", "2023-02-01")
-#visualize_av_prices_overlay()
-#load_and_store_data_borrowed()
-#load_and_store_data_oil()
-#print_data()
-#visualize_av_prices_overlay()
-#visualize_av_prices_not_overlay("Data/IDM_results_2022.pkl", "Data/IDM_results_2023.pkl")
+# visualize_av_prices_overlay("Data/IDM_results_2021.pkl", "Data/Oil_price_2021")
+# load_and_store_data_okte()
+# prices_from_to("DAM", "2023-12-01", "2024-02-01")
+# data_preparing2("DAM")#, "2023-01-01", "2023-02-01")
+# visualize_av_prices_overlay()
+# load_and_store_data_borrowed()
+# load_and_store_data_oil()
+# print_data()
+# visualize_av_prices_overlay()
+# visualize_av_prices_not_overlay("Data/IDM_results_2022.pkl", "Data/IDM_results_2023.pkl")
 # visualize_av_price_in_year("IDM_results_2020.pkl")

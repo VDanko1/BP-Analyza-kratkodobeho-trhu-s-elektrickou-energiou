@@ -1,14 +1,8 @@
 import datetime
-
 import PySimpleGUI as sg
-import os
-from fontTools.merge import layout
-from PIL import Image
-import time
 import priceGraphsYearly as pgy
 import PredictionAnalysis as pal
 import Predictions as pred
-
 
 def home_page():
     layout_color = '#1045B0'
@@ -23,7 +17,7 @@ def home_page():
     ]
 
     # Vytvorenie okna
-    window = sg.Window("Názov okna", layout, size=(600, 400), background_color=layout_color)
+    window = sg.Window("Domov", layout, size=(600, 400), background_color=layout_color)
 
     while True:
         event, values = window.read()
@@ -44,20 +38,23 @@ def home_page():
     # Zatvorenie okna
     window.close()
 
+
 def predictions_visualization():
     layout = [
-        [sg.Button("Naspäť", size=(30, 2)), sg.Button("Predikuj", size=(30, 2))],
-        [sg.Combo(["1 deň", "2 dni", "3 dni", "4 dni", "5 dní", "6 dní", "7 dní"],enable_events=True ,size=(20, 6),
-                  key='-COMBO-'),
-         sg.Combo(["Predikcie denného trhu", "Predikcie vnútrodenného trhu"],enable_events=True, size=(20, 6), key='-COMBO-2-')],
-        [sg.Image(key="-IMAGE-", size=(1000, 600), background_color="white"), sg.Multiline(size=(40, 37), key='-MULTILINE-')]
+        [sg.Button("Naspäť",size=(30, 2)), sg.Button("Predikuj", size=(30, 2))],
+        [sg.Combo(["1 deň", "2 dni", "3 dni", "4 dni", "5 dní", "6 dní", "7 dní"], enable_events=True, size=(33, 8),
+                  key='-COMBO-',readonly=True,default_value="Počet dní na predikovanie"),
+         sg.Combo(["Predikcie denného trhu", "Predikcie vnútrodenného trhu"], enable_events=True, size=(33, 8),
+                  key='-COMBO-2-',default_value= "Výber trhu na predikovanie",readonly=True)],
+        [sg.Image(key="-IMAGE-", size=(1000, 600)),
+         sg.Multiline(size=(37, 37), key='-MULTILINE-', background_color="white")]
     ]
 
     predictions_market = "DAM"
     number_of_days_to_predict = 24
     layout_color = '#1045B0'
 
-    window = sg.Window("Predikcie cien", size=(1400, 750), layout=layout, background_color=layout_color)
+    window = sg.Window("Predikcie cien", titlebar_background_color="green" ,size=(1350, 700), layout=layout, background_color=layout_color)
 
     while True:
         event, values = window.read()
@@ -69,31 +66,31 @@ def predictions_visualization():
 
         if event == '-COMBO-':
             if values[event] == "1 deň":
-                number_of_days_to_predict = number_of_days_to_predict * 1
+                number_of_days_to_predict = 1 * 24
                 print(number_of_days_to_predict)
                 continue
             elif values[event] == "2 dni":
-                number_of_days_to_predict = 2 * number_of_days_to_predict
+                number_of_days_to_predict = 2 * 24
                 print(number_of_days_to_predict)
                 continue
             elif values[event] == "3 dni":
-                number_of_days_to_predict = 3 * number_of_days_to_predict
+                number_of_days_to_predict = 3 * 24
                 print(number_of_days_to_predict)
                 continue
             elif values[event] == "4 dni":
-                number_of_days_to_predict = 4 * number_of_days_to_predict
+                number_of_days_to_predict = 4 * 24
                 print(number_of_days_to_predict)
                 continue
             elif values[event] == "5 dní":
-                number_of_days_to_predict = 5 * number_of_days_to_predict
+                number_of_days_to_predict = 5 * 24
                 print(number_of_days_to_predict)
                 continue
             elif values[event] == "6 dní":
-                number_of_days_to_predict = 6 * number_of_days_to_predict
+                number_of_days_to_predict = 6 * 24
                 print(number_of_days_to_predict)
                 continue
             elif values[event] == "7 dní":
-                number_of_days_to_predict = 7 * number_of_days_to_predict
+                number_of_days_to_predict = 7 * 24
                 print(number_of_days_to_predict)
                 continue
 
@@ -108,9 +105,10 @@ def predictions_visualization():
                 continue
 
         if event == "Predikuj":
-            pred.SarimaNaTvrdo(predictions_market, number_of_days_to_predict)
-            image_path = "Graphs/ACF_from_to.png"
+            predikcie = pred.SarimaPredikcie(number_of_days_to_predict, predictions_market)
+            image_path = "Graphs/SARIMA_from_to.png"
             window["-IMAGE-"].update(filename=image_path)
+            window['-MULTILINE-'].update(predikcie.to_string(index=False))
             continue
 
         if event == sg.WINDOW_CLOSED:
@@ -121,9 +119,9 @@ def predictions_visualization():
 def vykreslovanie_analyz():
     layout = [
         [sg.Button("Naspäť", size=(30, 2)), sg.Button("Vykresli", size=(30, 2))],
-        [sg.Input(readonly=True, enable_events=True, key='INPUT 1'),
+        [sg.Input(readonly=True, enable_events=True, key='INPUT 1',default_text="Dátum od"),
          sg.CalendarButton('Dátum od', close_when_date_chosen=True, format='%Y-%m-%d', key='Calendar 1')],
-        [sg.Input(readonly=True, disabled=True, enable_events=True, key='INPUT 2'),
+        [sg.Input(readonly=True, disabled=True, enable_events=True, key='INPUT 2',default_text="Dátum do"),
          sg.CalendarButton('Dátum do', close_when_date_chosen=True, format='%Y-%m-%d', key='Calendar 2')],
         [sg.Combo(['Vývoj cien denného trhu', 'Vývoj cien vnutrodenného trhu (60 minútový)',
                    'Vývoj cien vnútrodenného trhu (15 minutový)', 'Histogram denného trhu',
@@ -139,7 +137,7 @@ def vykreslovanie_analyz():
 
     layout_color = '#1045B0'
 
-    window = sg.Window("Vykreslovanie cien", size=(1200, 750), layout=layout, background_color=layout_color)
+    window = sg.Window("Vykreslovanie cien", size=(1200, 700), layout=layout, background_color=layout_color)
 
     typ_grafu = "DAM"
     datum_od = "2022-01-01"
@@ -270,4 +268,3 @@ def vykreslovanie_analyz():
 
 
 home_page()
-# vykreslovanie()

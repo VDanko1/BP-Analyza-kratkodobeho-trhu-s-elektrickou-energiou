@@ -50,22 +50,22 @@ def visualize_av_price_in_week(filename):
         """
 
         # Create the plot
-        plt.figure(figsize=(15, 6))
+        plt.figure(figsize=(12, 6))
         plt.plot(df_slovak_market['deliveryStart'], df_slovak_market['price'], linestyle='-', color='b',
-                 label='Slovak Market')
-        plt.plot(data_foreign_market['Date'], data_foreign_market['Austria'], linestyle='-', color='r', label='Austria')
+                 label='Slovensko')
+        plt.plot(data_foreign_market['Date'], data_foreign_market['Austria'], linestyle='-', color='r', label='Rakúsko')
         plt.plot(data_foreign_market['Date'], data_foreign_market['Czech Republic'], linestyle='-', color='y',
-                 label='Czech Republic')
-        plt.plot(data_foreign_market['Date'], data_foreign_market['Hungary'], linestyle='-', color='g', label='Hungary')
+                 label='Česká republika')
+        plt.plot(data_foreign_market['Date'], data_foreign_market['Hungary'], linestyle='-', color='g', label='Maďarsko')
         plt.plot(data_foreign_market['Date'], data_foreign_market['Germany/Luxembourg'], linestyle='-',
-              color='k', label='Germany/Luxembourg')
+              color='k', label='Nemecko/Luxembursko')
 
-        plt.title('DAM results from SADC markets - granularity 1 hour', fontsize = 16)
-        plt.xlabel('Date')
-        plt.ylabel('Price €/MWh')
-        plt.xticks(rotation=45)
+        plt.title('Porovnanie denných trhov s okolitými štátmi - granularita 1 hodina', fontsize = 16)
+        plt.xlabel('Dátum')
+        plt.ylabel('Cena €/MWh')
+        plt.xticks(rotation=10)
         plt.tight_layout()
-        plt.legend()
+        plt.legend(loc='upper center')
         plt.savefig("Graphs/SADC price comparasions (7.7 - 17.7.2023)- CZ,GER,AU,SK,HU.jpg" )
         plt.show()
 
@@ -98,22 +98,22 @@ def visualize_idm_dam():
     #df_dam_december = df_dam[(df_dam['deliveryStart'].dt.month == 12) & (df_dam['deliveryStart'].dt.year == 2023)]
     #df_idm_december = df_idm[(df_idm['deliveryStart'].dt.month == 12) & (df_idm['deliveryStart'].dt.year == 2023)]
 
-    plt.figure(figsize=(20, 6))
+    plt.figure(figsize=(12, 6))
 
     plt.plot(df_idm['deliveryStart'], df_idm['priceWeightedAverage'], linestyle='-', color='blue',
-             label="IDM (60 min) electricity price €/MWh")
+             label="Vnútrodenný trh")
 
     plt.plot(df_dam['deliveryStart'], df_dam['price'], linestyle='-', color='r',
-             label="DAM Electricity price €/MWh")
+             label="Denný trh")
 
-    plt.plot(df_idm_15['deliveryStart'], df_idm_15['priceAverage'], linestyle='-', color='g',alpha=0.2,
-             label="IDM (15 min) electricity price €/MWh")
+    #plt.plot(df_idm_15['deliveryStart'], df_idm_15['priceAverage'], linestyle='-', color='g',alpha=0.2,
+    #         label="IDM (15 min) electricity price €/MWh")
 
 
     plt.xticks(rotation=30)  # Adjust the rotation if needed
-    plt.title("DAM and IDM prices with 60 and 15 minute period of december 2023  - granularity 1 hour", fontsize=20)
-    plt.xlabel("Date", fontsize=12)
-    plt.ylabel("Price €/MWh", fontsize=12)
+    plt.title("Porovnanie cien na dennom a vnútrodennom trhu za december 2023  - granularita 1 hodina", fontsize=16)
+    plt.xlabel("Dátum", fontsize=12)
+    plt.ylabel("Cena €/MWh", fontsize=12)
     plt.legend(fontsize='large')
     plt.tight_layout()
     #plt.savefig("DAM a IDM (60,15 min) porovnanie december 2023")
@@ -235,3 +235,4 @@ def visualize_av_price_in_week_overlay():
 #visualize_av_price_in_week('Data/DAM_results_2024-02-07_2024-02-17.pkl')
 #visualize_av_price_in_week_overlay()
 visualize_idm_dam()
+#visualize_av_price_in_week()

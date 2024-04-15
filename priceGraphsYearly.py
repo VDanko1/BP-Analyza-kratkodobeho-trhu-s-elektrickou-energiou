@@ -12,12 +12,12 @@ import io
 
 
 def load_and_store_data_okte():
-    api_url = "https://isot.okte.sk/api/v1/dam/results?deliveryDayFrom=2024-01-01&deliveryDayTo=2024-04-12"
+    api_url = "https://isot.okte.sk/api/v1/dam/results?deliveryDayFrom=2023-11-01&deliveryDayTo=2023-12-01"
 
     response = requests.get(api_url)
 
     if response.status_code == 200:
-        filename = "Data/DAM_results_2024-JAN-APR12.pkl"
+        filename = "Data/DAM_results_2023NOV.pkl"
         with open(filename, "wb") as file:
             pickle.dump(response.json(), file)
     else:
@@ -249,7 +249,7 @@ def visualize_av_prices_overlay():
 
 # visualize_av_prices_two_years("IDM_results_2020.pkl", "IDM_results_2021.pkl")
 # visualize_av_prices_overlay("Data/IDM_results_2021.pkl", "Data/Oil_price_2021")
-# load_and_store_data_okte()
+load_and_store_data_okte()
 # prices_from_to("DAM", "2023-12-01", "2024-02-01")
 # data_preparing2("DAM")#, "2023-01-01", "2023-02-01")
 # visualize_av_prices_overlay()

@@ -84,27 +84,24 @@ def visualize_av_price_in_day_overlay(filename, filename1, filename2, filename3,
         prices_5 = [entry['priceWeightedAverage'] for entry in data5]
         prices_6 = [entry['priceWeightedAverage'] for entry in data6]
 
-
         # Create the plot
-        plt.figure(figsize=(20, 6))
-        plt.plot(prices, linestyle='-', marker=".", color='b', label='5.12.2023')
-        plt.plot(prices_1, linestyle='-', marker=".", color='r', label='6.12.2023')
-        plt.plot(prices_2, linestyle='-', marker=".", color='g', label='7.12.2023')
-        plt.plot(prices_3, linestyle='-', marker=".", color='y', label='8.12.2023')
-        plt.plot(prices_4, linestyle='-', marker=".", color='c', label='9.12.2023')
-        plt.plot(prices_5, linestyle='-', marker=".", color='#FF5733', label='10.12.2023')
-        plt.plot(prices_6, linestyle='-', marker=".", color='purple', label='11.12.2023')
+        plt.figure(figsize=(12, 6))
+        plt.plot(prices, linestyle='-', color='b', label='5.12.2023')
+        plt.plot(prices_1, linestyle='-',  color='r', label='6.12.2023')
+        plt.plot(prices_2, linestyle='-',  color='g', label='7.12.2023')
+        plt.plot(prices_3, linestyle='-',  color='y', label='8.12.2023')
+        plt.plot(prices_4, linestyle='-',  color='c', label='9.12.2023')
+        plt.plot(prices_5, linestyle='-', color='#FF5733', label='10.12.2023')
+        plt.plot(prices_6, linestyle='-', color='purple', label='11.12.2023')
 
-        #days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-        plt.title('Daily price trends from 5.12.2023 to 11.12.2023')
-        plt.xlabel('Period (hour in day)')
-        plt.ylabel('Price €/MWh')
+        plt.title('Vývoj cien na dennom trhu od 5.12.2023 do 11.12.2023 - granularita 1 hodina',fontsize=16)
+        plt.xlabel('Perióda dňa',fontsize=14)
+        plt.ylabel('Cena €/MWh',fontsize=14)
         plt.xticks()
         plt.legend()
-        plt.grid(alpha=0.3, zorder=-1)
+        #plt.grid(alpha=0.3, zorder=-1)
         plt.tight_layout()
         plt.savefig("Graphs/Tyzdnovy graf overlay.png")
-        # Show the plot
         plt.show()
 
     except FileNotFoundError as e:

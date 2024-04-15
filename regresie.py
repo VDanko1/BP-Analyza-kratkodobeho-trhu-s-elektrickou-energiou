@@ -137,39 +137,41 @@ def korelacia_denna():
         correlation = hour_data['price'].corr(hour_data['priceWeightedAverage'])
         correlations.append(correlation)
 
+        """
+        plt.figure(figsize=(10, 6))
+        sns.scatterplot(x='price', y='priceWeightedAverage', data=hour_data)
 
-        #plt.figure(figsize=(20, 6))
-        #sns.scatterplot(x='price', y='priceWeightedAverage', data=hour_data)
+        x = hour_data['price']
+        y = hour_data['priceWeightedAverage']
+        fit = np.polyfit(x, y, deg=1)
 
-        #x = hour_data['price']
-        #y = hour_data['priceWeightedAverage']
-        #fit = np.polyfit(x, y, deg=1)
-
-        #plt.plot(x, fit[0] * x + fit[1], color='red', linewidth=1, alpha=0.3)
-        #hodina = hour
-        #plt.title(
-           # f'Correlation graph for DAM price and IDM priceWeightedAverage each period of year 2023 - period {hodina + 1} - granularity 1 hour', fontsize=20)
-        #plt.xlabel('Price DAM €/MWh', fontsize=12)
-        #plt.ylabel('Average price IDM €/MWh',fontsize=12)
-        #plt.grid(True, alpha=0.5)
+        plt.plot(x, fit[0] * x + fit[1], color='red', linewidth=1, alpha=0.3)
+        hodina = hour
+        plt.title(
+            f'Lineárna regresia medzi cenami denného a vnútrodenného trhu pre periódu {hodina + 1} - granularita 1 hodina', fontsize=12.5)
+        plt.xlabel('Cena na dennom trhu €/MWh', fontsize=12)
+        plt.ylabel('Cena na vnútrodennom trhu €/MWh',fontsize=12)
+        plt.grid(True, alpha=0.5)
         #plt.savefig(f"Graphs/Korelacia_DAM_IDM_Hour_{hour}")
-        #plt.show()
+        plt.show()
 
         #print(f"Correlation between DAM price and IDM priceWeightedAverage (Hour {hour}): {correlation}")
         #print(f"Linear Regression Equation for Hour {hour}: IDM_Price = {fit[0]:.4f} * DAM_Price + {fit[1]:.4f}")
+        """
 
     plt.figure(figsize=(10, 6))
     plt.bar(range(1,25), correlations, color='blue')
-    plt.title('Correlation between DAM price and IDM priceWeightedAverage for each period', fontsize=16)
-    plt.xlabel('Hour', fontsize=12)
-    plt.ylabel('Correlation Coefficient', fontsize=12)
+    plt.title('Graf korelácie medzi cenami vnutrúdenného a denného trhu - granularita 1 hodina', fontsize=16)
+    plt.xlabel('Perióda', fontsize=12)
+    plt.ylabel('Koeficient korelácie', fontsize=12)
     plt.xticks(range(1,25))
-    plt.savefig('Graphs/Korelacie bar DAM a IDM kazda perioda')
+    #plt.savefig('Graphs/Korelacie bar DAM a IDM kazda perioda')
     plt.grid(axis='y', alpha=0.5)
     plt.show()
 
+
 # Spustite funkciu pre vytvorenie korelácie a vykreslenie scatter plotu
-#korelacia_denna()
+korelacia_denna()
 
 
 def novaMetoda():

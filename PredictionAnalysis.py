@@ -147,7 +147,12 @@ def Histogram(market_type, date_from, date_to):
 
     plt.figure(figsize=(10, 6))
     plt.hist(merged_df['price'], bins=15,color='skyblue', edgecolor='black')
-    plt.title('Histogram cien')
+    if (market_type == "IDM"):
+        plt.title(f'Histogram pre ceny vnutrodenného trhu s 60 minútovou periódou - granularita 1 hodina', fontsize=14)
+    if (market_type == "DAM"):
+        plt.title(f'Histogram pre ceny denného trhu - granularita 1 hodina', fontsize=14)
+    if (market_type == "IDM15"):
+        plt.title(f'Histogram pre ceny vnutrodenného trhu s 15 minútovou periódou - granularita 1 hodina', fontsize=14)
     plt.xlabel('Cena')
     plt.ylabel('Počet')
     plt.savefig("Graphs/Histogram_from_to")
@@ -186,7 +191,7 @@ def AdFullerTestIDM15():
 
 
 def DecompositionOfTimeSeries():
-    with open("Data/DAM_results_2023.pkl", "rb") as file_dam:
+    with open("Data/DAM_results_2023DEC.pkl", "rb") as file_dam:
         data_dam = pickle.load(file_dam)
 
     # Vytvorte DataFrame z vašich dát
@@ -202,34 +207,34 @@ def DecompositionOfTimeSeries():
     result = seasonal_decompose(price_series, model='additive')  # Perioda 24 pre dennú sezónnosť
 
     # Vykreslenie dekompozície
-    plt.figure(figsize=(14, 9))
+    plt.figure(figsize=(12, 12))
 
     plt.subplot(4, 1, 1)
-    plt.plot(df_dam['deliveryEnd'], df_dam['price'], label='Original Series')
-    plt.xlabel('Date')
-    plt.xticks(rotation=10)
-    plt.ylabel('Price')
+    plt.plot(df_dam['deliveryEnd'], df_dam['price'], label='Pôvodné ceny')
+    plt.xlabel('Dátum')
+    plt.xticks(rotation=0)
+    plt.ylabel('Cena')
     plt.legend()
 
     plt.subplot(4, 1, 2)
     plt.plot(df_dam['deliveryEnd'], result.trend, label='Trend')
-    plt.xlabel('Date')
-    plt.xticks(rotation=10)
-    plt.ylabel('Price')
+    plt.xlabel('Dátum')
+    plt.xticks(rotation=0)
+    plt.ylabel('Cena')
     plt.legend()
 
     plt.subplot(4, 1, 3)
-    plt.plot(df_dam['deliveryEnd'], result.seasonal, label='Seasonal')
-    plt.xlabel('Date')
-    plt.ylabel('Price')
-    plt.xticks(rotation=10)
+    plt.plot(df_dam['deliveryEnd'], result.seasonal, label='Sezónnosť')
+    plt.xlabel('Dátum')
+    plt.ylabel('Cena')
+    plt.xticks(rotation=0)
     plt.legend()
 
     plt.subplot(4, 1, 4)
-    plt.plot(df_dam['deliveryEnd'], result.resid, label='Residuals')
-    plt.xlabel('Date')
-    plt.ylabel('Price')
-    plt.xticks(rotation=10)
+    plt.plot(df_dam['deliveryEnd'], result.resid, label='Reziduá')
+    plt.xlabel('Dátum')
+    plt.ylabel('Cena')
+    plt.xticks(rotation=0)
     plt.legend()
 
     plt.tight_layout()
@@ -239,7 +244,7 @@ def DecompositionOfTimeSeries():
 
 
 def STLDecomposition():
-    with open("Data/DAM_results_2023.pkl", "rb") as file_dam:
+    with open("Data/DAM_results_2023DEC.pkl", "rb") as file_dam:
         data_dam2023 = pickle.load(file_dam)
 
     with open("Data/DAM_results_2020.pkl", "rb") as file_dam:
@@ -275,43 +280,43 @@ def STLDecomposition():
     combined_years['diff_price'] = combined_years['price'].diff()
 
     # STl dekompozícia
-    stl = STL(combined_years['diff_price'], seasonal=13)  # 13 je priemerná sezónna dĺžka v roku
+    stl = STL(df_dam2023['price'], seasonal=13)  # 13 je priemerná sezónna dĺžka v roku
 
     # Vykonanie dekompozície
     result = stl.fit()
 
     # Vykreslenie dekompozície
-    plt.figure(figsize=(16, 12))
+    plt.figure(figsize=(12, 12))
 
     plt.subplot(4, 1, 1)
-    plt.plot(combined_years['price'], label='Original Series')
-    plt.xlabel('Date')
-    plt.xticks(rotation=10)  # Nastavenie rotácie textu na x-ovej osi
-    plt.ylabel('Price')
+    plt.plot(df_dam2023['price'], label='Pôvodné ceny')
+    plt.xlabel('Dátum')
+    plt.xticks(rotation=0)  # Nastavenie rotácie textu na x-ovej osi
+    plt.ylabel('Cena')
     plt.legend()
 
     plt.subplot(4, 1, 2)
-    plt.plot(combined_years.index, result.trend, label='Trend')
-    plt.xlabel('Date')
-    plt.xticks(rotation=10)  # Nastavenie rotácie textu na x-ovej osi
-    plt.ylabel('Price')
+    plt.plot(df_dam2023.index, result.trend, label='Trend')
+    plt.xlabel('Dátum')
+    plt.xticks(rotation=0)  # Nastavenie rotácie textu na x-ovej osi
+    plt.ylabel('Cena')
     plt.legend()
 
     plt.subplot(4, 1, 3)
-    plt.plot(combined_years.index, result.seasonal, label='Seasonal')
-    plt.xlabel('Date')
-    plt.xticks(rotation=10)
-    plt.ylabel('Price')
+    plt.plot(df_dam2023.index, result.seasonal, label='Sezónnosť')
+    plt.xlabel('Dátum')
+    plt.xticks(rotation=0)
+    plt.ylabel('Cena')
     plt.legend()
 
     plt.subplot(4, 1, 4)
-    plt.plot(combined_years.index, result.resid, label='Residuals')
-    plt.xlabel('Date')
-    plt.xticks(rotation=10)
-    plt.ylabel('Price')
+    plt.plot(df_dam2023.index, result.resid, label='Reziduá')
+    plt.xlabel('Dátum')
+    plt.xticks(rotation=0)
+    plt.ylabel('Cena')
     plt.legend()
 
-    #plt.savefig("Graphs/Dekompozicia_IDM_2022_STL")
+    plt.savefig("Graphs/Dekompozícia_STL_2023_DEC_DAM")
     plt.tight_layout()
     plt.show()
 
@@ -321,17 +326,20 @@ def ACF(market_type, date_from, date_to):
     else:
         merged_df = merging_data_and_preparation_dam_idm(market_type, date_from, date_to)
 
-    plt.figure(figsize=(10, 6))
-    plot_acf(merged_df['price'], lags=24)
-    if (market_type == "IDM"):
-        plt.title(f'ACF graf pre ceny vnutrodenného trhu s 60 minútovou periódou - granularita 1 hodina', fontsize=8)
-    if (market_type == "DAM"):
-        plt.title(f'ACF graf pre ceny denného trhu - granularita 1 hodina', fontsize=8)
-    if (market_type == "IDM15"):
-        plt.title(f'ACF graf pre ceny vnutrodenného trhu s 15 minútovou periódou - granularita 1 hodina', fontsize=8)
-    plt.xlabel('Lag')
-    plt.savefig("Graphs/ACF_from_to")
-    plt.ylabel('ACF')
+    fig, ax = plt.subplots(figsize=(10, 6))  # Definícia veľkosti obrázka
+
+    plot_acf(merged_df['price'], lags=24, ax=ax)
+
+    if market_type == "IDM":
+        ax.set_title(f'ACF graf pre ceny vnútrodenného trhu s 60 minútovou periódou - granularita 1 hodina', fontsize=12)
+    elif market_type == "DAM":
+        ax.set_title(f'ACF graf pre ceny denného trhu - granularita 1 hodina', fontsize=12)
+    elif market_type == "IDM15":
+        ax.set_title(f'ACF graf pre ceny vnútrodenného trhu s 15 minútovou periódou - granularita 1 hodina', fontsize=12)
+
+    ax.set_xlabel('Lag')
+    ax.set_ylabel('ACF')
+    plt.savefig("Graphs/ACF_from_to", bbox_inches='tight')  # bbox_inches='tight' zabezpečí, že sa uloží celý obrázok
     plt.show()
 
 def PACF(market_type, date_from, date_to):
@@ -340,17 +348,22 @@ def PACF(market_type, date_from, date_to):
     else:
         merged_df = merging_data_and_preparation_dam_idm(market_type, date_from, date_to)
 
-    plt.figure(figsize=(10, 6))
-    plot_pacf(merged_df['price'], lags=24)
-    if (market_type == "IDM"):
-        plt.title(f'PACF graf pre ceny vnutrodenného trhu s 60 minútovou periódou - granularita 1 hodina', fontsize=8)
-    if (market_type == "DAM"):
-        plt.title(f'PACF graf pre ceny denného trhu - granularita 1 hodina', fontsize=8)
-    if (market_type == "IDM15"):
-        plt.title(f'PACF graf pre ceny vnutrodenného trhu s 15 minútovou periódou - granularita 1 hodina', fontsize=8)
-    plt.xlabel('Lag')
+    fig, ax = plt.subplots(figsize=(10, 6))  # Definícia veľkosti obrázka
+
+    plot_pacf(merged_df['price'], lags=24, ax=ax)  # Použitie ax=ax pre definíciu osi
+
+    if market_type == "IDM":
+        ax.set_title(f'PACF graf pre ceny vnútrodenného trhu s 60 minútovou periódou - granularita 1 hodina',
+                     fontsize=12)
+    elif market_type == "DAM":
+        ax.set_title(f'PACF graf pre ceny denného trhu - granularita 1 hodina', fontsize=12)
+    elif market_type == "IDM15":
+        ax.set_title(f'PACF graf pre ceny vnútrodenného trhu s 15 minútovou periódou - granularita 1 hodina',
+                     fontsize=12)
+
+    ax.set_xlabel('Lag')
+    ax.set_ylabel('PACF')
     plt.savefig("Graphs/PACF_from_to")
-    plt.ylabel('PACF')
     plt.show()
 
 
@@ -370,8 +383,8 @@ def qq_plot(market_type, date_from, date_to):
     if (market_type == "IDM15"):
         plt.title(f'Q-Q graf pre ceny vnutrodenného trhu s 15 minútovou periódou - granularita 1 hodina', fontsize=12)
 
-    plt.xlabel('Theoretical quantiles')
-    plt.ylabel('Ordered values')
+    plt.xlabel('Teoretické kvantily')
+    plt.ylabel('Usporiadané hodnoty')
     plt.grid(True)
     plt.savefig("Graphs/QQ_plot_from_to")
     plt.show()
@@ -383,4 +396,4 @@ def qq_plot(market_type, date_from, date_to):
 #STLDecomposition()
 #AdFullerTestIDM15()
 #AdFullerTestDAM()
-#DecompositionOfTimeSeries()
+STLDecomposition()

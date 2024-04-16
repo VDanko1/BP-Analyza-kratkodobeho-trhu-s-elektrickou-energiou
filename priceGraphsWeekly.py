@@ -191,15 +191,15 @@ def visualize_av_price_in_week_overlay():
 
 
         print(df_2022_druhy_polrok.describe())
-        # Create the plot
-        plt.figure(figsize=(20, 6))
-        plt.plot(data_2022_ropa_druhy_polrok['Date'], data_2022_ropa_druhy_polrok['Price'], linestyle='-', color='r',label="Brent Oil price per barrel")
-        plt.plot(data_2022_plyn_druhy_polrok['Date'], data_2022_plyn_druhy_polrok['Price'], linestyle='-', color='g',label="TTF Natural Gas price per cubic metre")
-        plt.plot(data_2022_uhlie_druhy_polrok['Date'], data_2022_uhlie_druhy_polrok['Price'] ,linestyle='-', color='orange',label="Newcastle Coal Price per tonne")
+
+        plt.figure(figsize=(14, 6))
+        plt.plot(data_2022_ropa_prvy_polrok['Date'], data_2022_ropa_prvy_polrok['Price'], color='r',label="Ropa")
+        plt.plot(data_2022_plyn_prvy_polrok['Date'], data_2022_plyn_prvy_polrok['Price'], color='g',label="Plyn")
+        plt.plot(data_2022_uhlie_prvy_polrok['Date'], data_2022_uhlie_prvy_polrok['Price'] , color='orange',label="Uhlie")
         #plt.plot(dates_2023, price_2023, linestyle='-', color='blue',alpha=0.3)
         #plt.plot(dates_2020, price_2020, linestyle='-', color='blue',alpha=0.3)
         #plt.plot(dates_2021, price_2021, linestyle='-', color='blue',alpha=0.3)
-        plt.plot(df_2022_druhy_polrok['Date'], df_2022_druhy_polrok['Price'], linestyle='-', color='blue',label="DAM Electricity price €/MWh",alpha=0.3)
+        plt.plot(df_2022_prvy_polrok['Date'], df_2022_prvy_polrok['Price'], linestyle='-', color='blue',label="Denný trh",alpha=0.5)
 
         average_prices_per_day = df.groupby('deliveryDay')['price'].mean()
         interpolated_price = np.interp(np.linspace(0, 1, 365), np.linspace(0, 1, len(data_plyn)),
@@ -214,14 +214,14 @@ def visualize_av_price_in_week_overlay():
 
         #print(correlationPoland)
 
-        plt.xticks(rotation=45, ha='right')  # Adjust the rotation for better readability
+        plt.xticks(rotation=0, ha='right')  # Adjust the rotation for better readability
         plt.xticks()
-        plt.title("DAM Slovak market prices and commodities Q3 and Q4 of 2022 - granularity 1 day", fontsize=16)
-        plt.xlabel("Date", fontsize = 12)
-        plt.ylabel("Price of commodity in €", fontsize = 12)
+        plt.title("Vývoj cien denného trhu a komodít za Q1 a Q2 roku 2022 - granularita 1 deň", fontsize=16)
+        plt.xlabel("Dátum", fontsize = 12)
+        plt.ylabel("Cena komodit (€)", fontsize = 12)
         plt.legend()
         plt.tight_layout()
-        plt.savefig("DAM a komodity 2022 Q3 Q4 - final")
+        #plt.savefig("DAM a komodity 2022 Q3 Q4 - final")
         # Show the plot
         plt.show()
 
@@ -234,5 +234,6 @@ def visualize_av_price_in_week_overlay():
 # Example usage with four filenames
 #visualize_av_price_in_week('Data/DAM_results_2024-02-07_2024-02-17.pkl')
 #visualize_av_price_in_week_overlay()
-visualize_idm_dam()
+visualize_av_price_in_week_overlay()
+#visualize_idm_dam()
 #visualize_av_price_in_week()

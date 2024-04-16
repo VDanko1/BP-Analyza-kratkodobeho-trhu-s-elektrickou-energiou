@@ -45,7 +45,10 @@ def predictions_visualization():
         [sg.Combo(["1 deň", "2 dni", "3 dni", "4 dni", "5 dní", "6 dní", "7 dní"], enable_events=True, size=(33, 8),
                   key='-COMBO-',readonly=True,default_value="Počet dní na predikovanie"),
          sg.Combo(["Predikcie denného trhu", "Predikcie vnútrodenného trhu"], enable_events=True, size=(33, 8),
-                  key='-COMBO-2-',default_value= "Výber trhu na predikovanie",readonly=True)],
+                  key='-COMBO-2-',default_value= "Výber trhu na predikovanie",readonly=True),
+         sg.Combo(["Model SARIMA", "Model AR"], enable_events=True, size=(33, 8),
+                  key='-COMBO-3-', default_value="Výber modelu", readonly=True)
+         ],
         [sg.Image(key="-IMAGE-", size=(1000, 600)),
          sg.Multiline(size=(37, 37), key='-MULTILINE-', background_color="white")]
     ]
@@ -53,6 +56,7 @@ def predictions_visualization():
     predictions_market = "DAM"
     number_of_days_to_predict = 24
     layout_color = '#1045B0'
+    Model = "SARIMA"
 
     window = sg.Window("Predikcie cien", titlebar_background_color="green" ,size=(1350, 700), layout=layout, background_color=layout_color)
 
@@ -104,12 +108,29 @@ def predictions_visualization():
                 print(predictions_market)
                 continue
 
+        if event == "-COMBO-3-":
+            if values[event] == "Model SARIMA":
+                Model = "SARIMA"
+                print(Model)
+                continue
+            if values[event] == "Model AR":
+                Model = "AR"
+                print(Model)
+                continue
+
         if event == "Predikuj":
-            predikcie = pred.SarimaPredikcie(number_of_days_to_predict, predictions_market)
-            image_path = "Graphs/SARIMA_from_to.png"
-            window["-IMAGE-"].update(filename=image_path)
-            window['-MULTILINE-'].update(predikcie.to_string(index=False))
-            continue
+            if Model == "SARIMA":
+                predikcie = pred.SarimaPredikcie(number_of_days_to_predict, predictions_market)
+                image_path = "Graphs/SARIMA_from_to.png"
+                window["-IMAGE-"].update(filename=image_path)
+                window['-MULTILINE-'].update(predikcie.to_string(index=False))
+                continue
+            if Model == "AR":
+                predikcie = pred.AutoRegressiveModel(number_of_days_to_predict, predictions_market)
+                image_path = "Graphs/AR_from_to.png"
+                window["-IMAGE-"].update(filename=image_path)
+                window['-MULTILINE-'].update(predikcie.to_string(index=False))
+                continue
 
         if event == sg.WINDOW_CLOSED:
             break
@@ -137,7 +158,7 @@ def vykreslovanie_analyz():
 
     layout_color = '#1045B0'
 
-    window = sg.Window("Vykreslovanie cien", size=(1200, 700), layout=layout, background_color=layout_color)
+    window = sg.Window("Vykreslovanie cien", size=(1200, 750), layout=layout, background_color=layout_color)
 
     typ_grafu = "DAM"
     datum_od = "2022-01-01"

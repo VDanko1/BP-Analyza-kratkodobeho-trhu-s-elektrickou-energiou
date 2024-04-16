@@ -28,7 +28,7 @@ def SarimaPredikcie(number_of_days_to_predict, market_type):
 
     print(predikcie_df)
 
-    plt.figure(figsize=(10, 6))  # Zväčšenie veľkosti grafu
+    plt.figure(figsize=(10, 6))
     plt.plot(predikcie_df['deliveryEnd'], predikcie_df['price'], label='Predikcie', color='blue')
     if market_type == "IDM":
         plt.title('Predikcie cien vnutrodenného trhu - model SARIMA')
@@ -55,6 +55,56 @@ def SarimaPredikcie(number_of_days_to_predict, market_type):
     plt.show()
 
     return predikcie_df
+
+def AutoRegressiveModel(number_of_days_to_predict, market_type):
+    df_dam = data_preparing(market_type)
+
+    model = AutoReg(df_dam['price'], lags=24)
+    model_fit = model.fit()
+
+    predictions = model_fit.predict(start=len(df_dam), end=len(df_dam) + number_of_days_to_predict)
+
+    predikcie_df = pd.DataFrame({
+        'deliveryEnd': predictions.index,
+        'price': predictions.values
+    })
+
+    # Konverzia indexu na stĺpec a formátovanie dátumu
+    predikcie_df['deliveryEnd'] = pd.to_datetime(predikcie_df['deliveryEnd'])
+    predikcie_df['deliveryEnd'] = predikcie_df['deliveryEnd'].dt.strftime('%Y-%m-%d %H:%M')
+    predikcie_df['price'] = predikcie_df['price'].round(2)
+
+    print(predikcie_df['price'])
+    print(predikcie_df['deliveryEnd'])
+
+    plt.figure(figsize=(10, 6))  # Zväčšenie veľkosti grafu
+    plt.plot(predikcie_df['deliveryEnd'], predikcie_df['price'], label='Predikcie', color='blue')
+    if market_type == "IDM":
+        plt.title('Predikcie cien vnutrodenného trhu - model AR')
+    if market_type == "DAM":
+        plt.title('Predikcie cien denného trhu - model AR')
+
+    plt.xlabel('Dátum')
+    plt.ylabel('Cena €/MWh')
+
+    n = 6
+
+    if number_of_days_to_predict <= 48:
+        n = 6
+
+    if number_of_days_to_predict >= 48:
+        n = 15
+
+    if number_of_days_to_predict >= 120:
+        n = 30
+
+    plt.xticks(predikcie_df['deliveryEnd'][::n], rotation=0)
+    plt.legend()
+    plt.savefig("Graphs/AR_from_to")
+    plt.show()
+
+    return predikcie_df
+
 
 def SARIMAX(number_of_days_to_predict, market_type):
 
@@ -139,6 +189,7 @@ def SarimaTrainTest(number_of_days_to_predict):
 
     plt.figure(figsize=(12, 9))  # Zväčšenie veľkosti grafu
     plt.plot(predikcie_df['deliveryEnd'], predikcie_df['price'], label='Predikované ceny', color='red')
+    plt.plot(test_size.index, test_size['price'], label='testovacie ceny', color='blue')
     plt.title('Predikované ceny - model SARIMA', fontsize=16)
     plt.xlabel('Dátum', fontsize=14)
     plt.ylabel('Cena €/MWh', fontsize=14)
@@ -249,5 +300,7 @@ def data_preparing_working(market_type):
 
 
 #SarimaPredikcie(24, "IDM")
-SARIMAX(7,"DAM")
+#SARIMAX(7,"DAM")
+#AutoRegressiveModel(30,"DAM")
+#SarimaTrainTest(24)
 

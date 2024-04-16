@@ -227,15 +227,15 @@ def visualize_av_prices_overlay():
         dates_idm = [datetime.strptime(date, '%Y-%m-%d') for date in date_dam]
 
         # Create the plot with two lines
-        plt.figure(figsize=(20, 6))
-        plt.plot(price_dam, linestyle='-', color='g', label='DAM prices 1 week of december 2023')
-        plt.plot(price_dam2, linestyle='-', color='r', label='DAM prices 2 week of december 2023')
-        plt.plot(price_dam3, linestyle='-', color='b', label='DAM prices of Christmas week of december 2023')
-        plt.plot(price_dam4, linestyle='-', color='olive', label='DAM prices 4 week of december 2023')
+        plt.figure(figsize=(12, 6))
+        plt.plot(price_dam,  color='g', label='Ceny za prvý týždeň')
+        plt.plot(price_dam2,  color='r', label='Ceny za druhý týždeň')
+        plt.plot(price_dam3,  color='b', label='Ceny za tretí týždeň')
+        plt.plot(price_dam4,  color='olive', label='Ceny za štvrtý týždeň')
 
-        plt.title('Weekly prices of december 2023 on DAM market - granularity 1 hour', fontsize=16)
-        plt.xlabel('Period', fontsize=16)
-        plt.ylabel('Price €/MWh', fontsize=16)
+        plt.title('Cenny denného trhu za december 2023 - granularita 1 hodina', fontsize=16)
+        plt.xlabel('Perióda', fontsize=16)
+        plt.ylabel('Cena €/MWh', fontsize=16)
         plt.legend()
         plt.savefig("Vyvoj cien DAM za december 2023 (tyzdne) - final")
         plt.tight_layout()
@@ -249,10 +249,11 @@ def visualize_av_prices_overlay():
 
 # visualize_av_prices_two_years("IDM_results_2020.pkl", "IDM_results_2021.pkl")
 # visualize_av_prices_overlay("Data/IDM_results_2021.pkl", "Data/Oil_price_2021")
-load_and_store_data_okte()
+#load_and_store_data_okte()
 # prices_from_to("DAM", "2023-12-01", "2024-02-01")
 # data_preparing2("DAM")#, "2023-01-01", "2023-02-01")
 # visualize_av_prices_overlay()
+#visualize_av_prices_overlay()
 # load_and_store_data_borrowed()
 # load_and_store_data_oil()
 # print_data()

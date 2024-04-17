@@ -4,20 +4,22 @@ import priceGraphsYearly as pgy
 import PredictionAnalysis as pal
 import Predictions as pred
 
+
 def home_page():
-    layout_color = '#1045B0'
+    sg.theme('SystemDefaultForReal')
+    ttk_style = 'vista'
     layout = [
         [
             sg.Column([
-                [sg.Button("Analýzy", size=(14, 2))],
-                [sg.Button("Predikcie", size=(14, 2))],
-                [sg.Button("Ukoncit", size=(14, 2))]
-            ], justification='center', pad=(0, (110, 0)), expand_y=True, background_color=layout_color)
+                [sg.Button("Analýzy", use_ttk_buttons=True, size=(10, 2))],
+                [sg.Button("Predikcie", use_ttk_buttons=True, size=(10, 2))],
+                [sg.Button("Ukoncit", use_ttk_buttons=True, size=(10, 2))]
+            ], justification='center', pad=(0, (50, 0)), expand_y=True)
         ]
     ]
 
     # Vytvorenie okna
-    window = sg.Window("Domov", layout, size=(600, 400), background_color=layout_color)
+    window = sg.Window("Domov", layout, size=(600, 400), ttk_theme=ttk_style)
 
     while True:
         event, values = window.read()
@@ -40,25 +42,30 @@ def home_page():
 
 
 def predictions_visualization():
+    sg.theme('SystemDefaultForReal')
+    ttk_style = 'vista'
+
     layout = [
-        [sg.Button("Naspäť",size=(30, 2)), sg.Button("Predikuj", size=(30, 2))],
+        [sg.Button("Naspäť", size=(30, 1), use_ttk_buttons=True)],
         [sg.Combo(["1 deň", "2 dni", "3 dni", "4 dni", "5 dní", "6 dní", "7 dní"], enable_events=True, size=(33, 8),
-                  key='-COMBO-',readonly=True,default_value="Počet dní na predikovanie"),
+                  key='-COMBO-', readonly=True, default_value="Počet dní na predikovanie"),
+
          sg.Combo(["Predikcie denného trhu", "Predikcie vnútrodenného trhu"], enable_events=True, size=(33, 8),
-                  key='-COMBO-2-',default_value= "Výber trhu na predikovanie",readonly=True),
+                  key='-COMBO-2-', default_value="Výber trhu na predikovanie", readonly=True),
+
          sg.Combo(["Model SARIMA", "Model AR"], enable_events=True, size=(33, 8),
                   key='-COMBO-3-', default_value="Výber modelu", readonly=True)
-         ],
-        [sg.Image(key="-IMAGE-", size=(1000, 600)),
-         sg.Multiline(size=(37, 37), key='-MULTILINE-', background_color="white")]
+            , sg.Button("Predikuj", use_ttk_buttons=True, size=(30, 1))],
+        [sg.Image(key="-IMAGE-", size=(1000, 600), background_color="#D2D0D0"),
+         sg.Multiline(size=(37, 37), key='-MULTILINE-', background_color="#D2D0D0")]
     ]
 
     predictions_market = "DAM"
     number_of_days_to_predict = 24
-    layout_color = '#1045B0'
-    Model = "SARIMA"
+    model = "SARIMA"
 
-    window = sg.Window("Predikcie cien", titlebar_background_color="green" ,size=(1350, 700), layout=layout, background_color=layout_color)
+    window = sg.Window("Predikcie cien", titlebar_background_color="green", ttk_theme=ttk_style, size=(1350, 700),
+                       layout=layout)
 
     while True:
         event, values = window.read()
@@ -110,22 +117,22 @@ def predictions_visualization():
 
         if event == "-COMBO-3-":
             if values[event] == "Model SARIMA":
-                Model = "SARIMA"
-                print(Model)
+                model = "SARIMA"
+                print(model)
                 continue
             if values[event] == "Model AR":
-                Model = "AR"
-                print(Model)
+                model = "AR"
+                print(model)
                 continue
 
         if event == "Predikuj":
-            if Model == "SARIMA":
+            if model == "SARIMA":
                 predikcie = pred.SarimaPredikcie(number_of_days_to_predict, predictions_market)
                 image_path = "Graphs/SARIMA_from_to.png"
                 window["-IMAGE-"].update(filename=image_path)
                 window['-MULTILINE-'].update(predikcie.to_string(index=False))
                 continue
-            if Model == "AR":
+            if model == "AR":
                 predikcie = pred.AutoRegressiveModel(number_of_days_to_predict, predictions_market)
                 image_path = "Graphs/AR_from_to.png"
                 window["-IMAGE-"].update(filename=image_path)
@@ -137,12 +144,16 @@ def predictions_visualization():
 
         window.close()
 
+
 def vykreslovanie_analyz():
     layout = [
-        [sg.Button("Naspäť", size=(30, 2)), sg.Button("Vykresli", size=(30, 2))],
-        [sg.Input(readonly=True, enable_events=True, key='INPUT 1',default_text="Dátum od"),
+        [sg.Button("Naspäť", size=(30, 1), use_ttk_buttons=True),
+         ],
+        [sg.Input(readonly=True, enable_events=True, key='INPUT 1', default_text="Dátum od"),
+
          sg.CalendarButton('Dátum od', close_when_date_chosen=True, format='%Y-%m-%d', key='Calendar 1')],
-        [sg.Input(readonly=True, disabled=True, enable_events=True, key='INPUT 2',default_text="Dátum do"),
+        [sg.Input(readonly=True, disabled=True, enable_events=True, key='INPUT 2', default_text="Dátum do"),
+
          sg.CalendarButton('Dátum do', close_when_date_chosen=True, format='%Y-%m-%d', key='Calendar 2')],
         [sg.Combo(['Vývoj cien denného trhu', 'Vývoj cien vnutrodenného trhu (60 minútový)',
                    'Vývoj cien vnútrodenného trhu (15 minutový)', 'Histogram denného trhu',
@@ -152,13 +163,17 @@ def vykreslovanie_analyz():
                    'PACF graf vnútrodenného trhu (60 minútový)', 'PACF graf vnútrodenného trhu (15 minútový)',
                    'Q-Q graf vnútrodenného trhu (60 minútový)', 'Q-Q graf vnútrodenného trhu (15 minútový)',
                    'Q-Q graf denného trhu'],
-                  enable_events=True, size=(45, 6), key='-COMBO-')],
-        [sg.Image(key="-IMAGE-", size=(1000, 600))]
+                  enable_events=True, size=(45, 6), key='-COMBO-'),
+         sg.Button("Vykresli", size=(30, 1), use_ttk_buttons=True)],
+
+        [sg.Image(key="-IMAGE-", size=(1000, 600), background_color="#D2D0D0")]
     ]
 
-    layout_color = '#1045B0'
+    ttk_style = "vista"
+    sg.theme('SystemDefaultForReal')
 
-    window = sg.Window("Vykreslovanie cien", size=(1200, 750), layout=layout, background_color=layout_color)
+    window = sg.Window("Vykreslovanie cien", size=(1200, 750), titlebar_background_color="green", layout=layout,
+                       ttk_theme=ttk_style)
 
     typ_grafu = "DAM"
     datum_od = "2022-01-01"

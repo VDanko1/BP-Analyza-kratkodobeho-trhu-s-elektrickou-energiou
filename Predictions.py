@@ -6,8 +6,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from statsmodels.tsa.ar_model import AutoReg
 
-
-def SarimaPredikcie(number_of_days_to_predict, market_type):
+def sarima_model(number_of_days_to_predict, market_type):
     df_dam = data_preparing(market_type)
 
     model = pmd.auto_arima(df_dam['price'], start_p=1, start_q=0, max_p=1, max_q=0,
@@ -56,7 +55,8 @@ def SarimaPredikcie(number_of_days_to_predict, market_type):
 
     return predikcie_df
 
-def AutoRegressiveModel(number_of_days_to_predict, market_type):
+
+def auto_regressive_model(number_of_days_to_predict, market_type):
     df_dam = data_preparing(market_type)
 
     model = AutoReg(df_dam['price'], lags=24)
@@ -69,7 +69,6 @@ def AutoRegressiveModel(number_of_days_to_predict, market_type):
         'price': predictions.values
     })
 
-    # Konverzia indexu na stĺpec a formátovanie dátumu
     predikcie_df['deliveryEnd'] = pd.to_datetime(predikcie_df['deliveryEnd'])
     predikcie_df['deliveryEnd'] = predikcie_df['deliveryEnd'].dt.strftime('%Y-%m-%d %H:%M')
     predikcie_df['price'] = predikcie_df['price'].round(2)
@@ -106,26 +105,25 @@ def AutoRegressiveModel(number_of_days_to_predict, market_type):
     return predikcie_df
 
 
-def SARIMAX(number_of_days_to_predict, market_type):
-
+def sarimax_model(number_of_days_to_predict, market_type):
     df_dam = data_preparing(market_type)
 
-    df_dam = preparing_sarimax_data(df_dam)
+    df_weather_data = sarimax_data_preparing()
 
-    print(df_dam.columns)
-    print(df_dam.tail())
-    print(df_dam.head())
+    exogenous_columns = ['wind_speed_10m', 'ghi', 'dhi']
+    exogenous_data = df_weather_data[exogenous_columns]
 
-    """
-    
-    model = pmd.auto_arima(df_dam['price'], start_p=1, start_q=0, max_p=1, max_q=0,
-                           start_P=2, start_Q=0, max_P=2, max_Q=0, m=24, seasonal=True,
-                           trace=True, stepwise=False, max_time=50,
-                           d=1, D=1, suppress_warnings=True)
+    SARIMAX_model = pmd.auto_arima(df_dam[['price']], exogenous=exogenous_data,
+                                   start_p=1, start_q=0, max_p=1, max_q=0,
+                                   start_P=2, start_Q=0, max_P=2, max_Q=0, m=24, seasonal=True,
+                                   trace=True, stepwise=False, max_time=50,
+                                   d=1, D=1, suppress_warnings=True)
 
+    exog_weights = SARIMAX_model.get_params()['exog']
+    print("Váhy exogénnych premenných:", exog_weights)
 
+    predikcie_original = SARIMAX_model.predict(number_of_days_to_predict)
 
-    predikcie_original = model.predict(number_of_days_to_predict)
 
     predikcie_df = pd.DataFrame({
         'deliveryEnd': predikcie_original.index,
@@ -141,9 +139,9 @@ def SARIMAX(number_of_days_to_predict, market_type):
     plt.figure(figsize=(10, 6))  # Zväčšenie veľkosti grafu
     plt.plot(predikcie_df['deliveryEnd'], predikcie_df['price'], label='Predikcie', color='blue')
     if market_type == "IDM":
-        plt.title('Predikcie cien vnutrodenného trhu - model SARIMA')
+        plt.title('Predikcie cien vnutrodenného trhu - model SARIMAX')
     if market_type == "DAM":
-        plt.title('Predikcie cien denného trhu - model SARIMA')
+        plt.title('Predikcie cien denného trhu - model SARIMAX')
 
     plt.xlabel('Dátum')
     plt.ylabel('Cena €/MWh')
@@ -161,11 +159,24 @@ def SARIMAX(number_of_days_to_predict, market_type):
 
     plt.xticks(predikcie_df['deliveryEnd'][::n], rotation=0)
     plt.legend()
-    plt.savefig("Graphs/SARIMA_from_to")
+    plt.savefig("Graphs/SARIMAX_from_to")
     plt.show()
 
     return predikcie_df
-    """
+
+
+def sarimax_data_preparing():
+    file_path = "Data/pocasie_2023-10.4.2024.csv"
+    df = pd.read_csv(file_path)
+    df = df.drop(columns=['period'])
+    df.dropna(inplace=True)
+
+    df["period_end"] = pd.to_datetime(df["period_end"])
+    df["period_end"] = pd.to_datetime(df["period_end"], format='%Y-%m-%d %H:%M')
+    print(df)
+
+    return df
+
 
 def SarimaTrainTest(number_of_days_to_predict):
     df_dam = data_preparing_working("DAM")
@@ -201,14 +212,6 @@ def SarimaTrainTest(number_of_days_to_predict):
     # formatted_dates = pd.to_datetime(predikcie_df['deliveryEnd'][::n]).strftime('%Y-%m-%d %H:%M:%S')
     # plt.xticks(predikcie_df['deliveryEnd'][::n], formatted_dates, rotation=20)
 
-
-def preparing_sarimax_data(df):
-    df['previous_year_date'] = df.index - pd.DateOffset(years=1)
-
-    # Pridanie minuloročných cien na základe dátumov
-    df['previous_year_price'] = df['previous_year_date'].map(df['price'].shift(freq='365D'))
-
-    return df
 
 def data_preparing(market_type):
     today = datetime.date.today()
@@ -299,8 +302,9 @@ def data_preparing_working(market_type):
     return response_df
 
 
-#SarimaPredikcie(24, "IDM")
-#SARIMAX(7,"DAM")
-#AutoRegressiveModel(30,"DAM")
-#SarimaTrainTest(24)
-
+# sarima_model(24, "DAM")
+# sarimax_data_preparing()
+# SARIMAX(7,"DAM")
+#sarimax_model(24, "DAM")
+# AutoRegressiveModel(30,"DAM")
+# SarimaTrainTest(24)

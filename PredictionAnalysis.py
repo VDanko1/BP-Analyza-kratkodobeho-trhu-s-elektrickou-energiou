@@ -90,7 +90,7 @@ def merging_data_and_preparation_IDM15(market_type, date_from, date_to):
     for df in [df_dam2024, df_dam2023]:
         df['price'] = pd.to_numeric(df['price'], errors='coerce')
 
-    merged_df = pd.concat([df_dam2023, df_dam2024])
+    merged_df = pd.concat([df_dam2024, df_dam2023])
     merged_df = merged_df[(merged_df['deliveryEnd'] >= date_from) & (merged_df['deliveryEnd'] <= date_to)]
     return merged_df
 
@@ -343,6 +343,7 @@ def ACF(market_type, date_from, date_to):
     plt.show()
 
 def PACF(market_type, date_from, date_to):
+
     if market_type == "IDM15":
         merged_df = merging_data_and_preparation_IDM15(market_type, date_from, date_to)
     else:
@@ -396,4 +397,4 @@ def qq_plot(market_type, date_from, date_to):
 #STLDecomposition()
 #AdFullerTestIDM15()
 #AdFullerTestDAM()
-STLDecomposition()
+#STLDecomposition()

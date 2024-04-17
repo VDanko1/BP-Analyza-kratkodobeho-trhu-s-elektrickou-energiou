@@ -1,8 +1,11 @@
 import datetime
+import threading
+import time
 import PySimpleGUI as sg
 import priceGraphsYearly as pgy
 import PredictionAnalysis as pal
 import Predictions as pred
+
 
 
 def home_page():
@@ -42,6 +45,7 @@ def home_page():
 
 
 def predictions_visualization():
+
     sg.theme('SystemDefaultForReal')
     ttk_style = 'vista'
 
@@ -53,16 +57,16 @@ def predictions_visualization():
          sg.Combo(["Predikcie denného trhu", "Predikcie vnútrodenného trhu"], enable_events=True, size=(33, 8),
                   key='-COMBO-2-', default_value="Výber trhu na predikovanie", readonly=True),
 
-         sg.Combo(["Model SARIMA", "Model AR"], enable_events=True, size=(33, 8),
+         sg.Combo(["Model SARIMAX", "Model SARIMA", "Model AR"], enable_events=True, size=(33, 8),
                   key='-COMBO-3-', default_value="Výber modelu", readonly=True)
             , sg.Button("Predikuj", use_ttk_buttons=True, size=(30, 1))],
         [sg.Image(key="-IMAGE-", size=(1000, 600), background_color="#D2D0D0"),
          sg.Multiline(size=(37, 37), key='-MULTILINE-', background_color="#D2D0D0")]
     ]
 
+    model = "SARIMA"
     predictions_market = "DAM"
     number_of_days_to_predict = 24
-    model = "SARIMA"
 
     window = sg.Window("Predikcie cien", titlebar_background_color="green", ttk_theme=ttk_style, size=(1350, 700),
                        layout=layout)
@@ -124,17 +128,32 @@ def predictions_visualization():
                 model = "AR"
                 print(model)
                 continue
+            if values[event] == "Model SARIMAX":
+                model = "SARIMAX"
+                print(model)
+                continue
 
         if event == "Predikuj":
             if model == "SARIMA":
-                predikcie = pred.SarimaPredikcie(number_of_days_to_predict, predictions_market)
+                predikcie = pred.sarima_model(number_of_days_to_predict, predictions_market)
+                predikcie = predikcie.rename(columns={'deliveryEnd': 'Dátum dodania', 'price': 'Cena €/MWh'})
                 image_path = "Graphs/SARIMA_from_to.png"
                 window["-IMAGE-"].update(filename=image_path)
                 window['-MULTILINE-'].update(predikcie.to_string(index=False))
                 continue
+
             if model == "AR":
-                predikcie = pred.AutoRegressiveModel(number_of_days_to_predict, predictions_market)
+                predikcie = pred.auto_regressive_model(number_of_days_to_predict, predictions_market)
+                predikcie = predikcie.rename(columns={'deliveryEnd': 'Dátum dodania', 'price': 'Cena €/MWh'})
                 image_path = "Graphs/AR_from_to.png"
+                window["-IMAGE-"].update(filename=image_path)
+                window['-MULTILINE-'].update(predikcie.to_string(index=False))
+                continue
+
+            if model == "SARIMAX":
+                predikcie = pred.sarimax_model(number_of_days_to_predict, predictions_market)
+                predikcie = predikcie.rename(columns={'deliveryEnd': 'Dátum dodania', 'price': 'Cena €/MWh'})
+                image_path = "Graphs/SARIMAX_from_to.png"
                 window["-IMAGE-"].update(filename=image_path)
                 window['-MULTILINE-'].update(predikcie.to_string(index=False))
                 continue
@@ -143,7 +162,6 @@ def predictions_visualization():
             break
 
         window.close()
-
 
 def vykreslovanie_analyz():
     layout = [
@@ -166,7 +184,8 @@ def vykreslovanie_analyz():
                   enable_events=True, size=(45, 6), key='-COMBO-'),
          sg.Button("Vykresli", size=(30, 1), use_ttk_buttons=True)],
 
-        [sg.Image(key="-IMAGE-", size=(1000, 600), background_color="#D2D0D0")]
+        [sg.Text("", size=(8, 1)),  # Prázdny text vytvára priestor pred obrázkom
+         sg.Image(key="-IMAGE-", size=(1000, 600), background_color="#D2D0D0")]
     ]
 
     ttk_style = "vista"
@@ -194,6 +213,7 @@ def vykreslovanie_analyz():
             selected_value = values['-COMBO-']
             typ_grafu = selected_value
             print(f'Vybraná hodnota: {selected_value}')
+
 
         if event == 'INPUT 1':
             vybrany_datum_str = values[event]  # Predpokladám, že hodnota je reťazec (string)

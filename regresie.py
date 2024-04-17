@@ -88,28 +88,6 @@ def korelacie_cudzie_markety():
 
 korelacie_cudzie_markety()
 
-def kokot():
-    json_file_path = 'Data/DAM_EU_Trhy_2023.csv'
-
-    # Read the JSON file into a DataFrame
-    data = pd.read_csv(json_file_path)
-
-    with open('Data/DAM_results_2023.pkl', 'rb') as file:
-        data_dam = pickle.load(file)
-
-    data_dam = pd.DataFrame(data_dam)
-    data_permits = pd.DataFrame(data)
-
-    # df = pd.json_normalize(data, 'series', ['d1', 'd2', 'agr'])
-    # y_and_date_values = [{'y': entry['y'], 'date': entry['date']} for series in data['series'] for entry in series['data']]
-
-    # sorted_values = sorted(y_and_date_values, key=lambda x: x['date'])
-
-    print(len(data_permits))
-    print(len(data_dam))
-
-    # print(data_dam[['price', 'deliveryStart']].head())
-
 
 def korelacia_denna():
     with open("Data/DAM_results_2023.pkl", "rb") as file_dam:

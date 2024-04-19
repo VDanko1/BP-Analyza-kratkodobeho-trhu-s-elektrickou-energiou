@@ -191,7 +191,7 @@ def vykreslovanie_analyz():
     ttk_style = "vista"
     sg.theme('SystemDefaultForReal')
 
-    window = sg.Window("Vykreslovanie cien", size=(1200, 750), titlebar_background_color="green", layout=layout,
+    window = sg.Window("Analýzy", size=(1200, 750), titlebar_background_color="green", layout=layout,
                        ttk_theme=ttk_style)
 
     typ_grafu = "DAM"

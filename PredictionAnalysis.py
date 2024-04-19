@@ -1,4 +1,5 @@
-from scipy.stats import stats
+import numpy as np
+from scipy.stats import stats, norm
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.tsa.stl._stl import STL
 import scipy.stats as stats
@@ -140,21 +141,25 @@ def merging_data_and_preparation_dam_idm(market_type, date_from, date_to):
     return merged_df
 
 def Histogram(market_type, date_from, date_to):
-    if (market_type == "IDM15"):
-        merged_df = merging_data_and_preparation_IDM15(market_type,date_from,date_to)
+    if market_type == "IDM15":
+        merged_df = merging_data_and_preparation_IDM15(market_type, date_from, date_to)
     else:
         merged_df = merging_data_and_preparation_dam_idm(market_type, date_from, date_to)
 
     plt.figure(figsize=(10, 6))
-    plt.hist(merged_df['price'], bins=15,color='skyblue', edgecolor='black')
-    if (market_type == "IDM"):
-        plt.title(f'Histogram pre ceny vnutrodenného trhu s 60 minútovou periódou - granularita 1 hodina', fontsize=14)
-    if (market_type == "DAM"):
-        plt.title(f'Histogram pre ceny denného trhu - granularita 1 hodina', fontsize=14)
-    if (market_type == "IDM15"):
-        plt.title(f'Histogram pre ceny vnutrodenného trhu s 15 minútovou periódou - granularita 1 hodina', fontsize=14)
-    plt.xlabel('Cena')
-    plt.ylabel('Počet')
+    plt.hist(merged_df['price'], bins=15, color='skyblue', edgecolor='black', density=True, alpha=0.7,
+             label='Histogram')
+
+    if market_type == "IDM":
+        plt.title('Histogram pre ceny vnútrodenného trhu s 60 minútovou periódou', fontsize=14)
+    elif market_type == "DAM":
+        plt.title('Histogram pre ceny denného trhu', fontsize=14)
+    elif market_type == "IDM15":
+        plt.title('Histogram pre ceny vnútrodenného trhu s 15 minútovou periódou', fontsize=14)
+
+    plt.xlabel('Cena €/MWh')
+    plt.ylabel('Hustota pravdepodobnosti')
+    plt.legend()
     plt.savefig("Graphs/Histogram_from_to")
     plt.show()
 
@@ -244,7 +249,7 @@ def DecompositionOfTimeSeries():
 
 
 def STLDecomposition():
-    with open("Data/DAM_results_2023DEC.pkl", "rb") as file_dam:
+    with open("Data/DAM_results_2023.pkl", "rb") as file_dam:
         data_dam2023 = pickle.load(file_dam)
 
     with open("Data/DAM_results_2020.pkl", "rb") as file_dam:
@@ -280,41 +285,43 @@ def STLDecomposition():
     combined_years['diff_price'] = combined_years['price'].diff()
 
     # STl dekompozícia
-    stl = STL(df_dam2023['price'], seasonal=13)  # 13 je priemerná sezónna dĺžka v roku
+    stl = STL(combined_years['price'], seasonal=13)  # 13 je priemerná sezónna dĺžka v roku
 
     # Vykonanie dekompozície
     result = stl.fit()
 
     # Vykreslenie dekompozície
-    plt.figure(figsize=(12, 12))
+    plt.figure(figsize=(12, 14))
 
     plt.subplot(4, 1, 1)
-    plt.plot(df_dam2023['price'], label='Pôvodné ceny')
-    plt.xlabel('Dátum')
+    plt.plot(combined_years['price'], label='Pôvodné ceny')
+    plt.xlabel('Dátum', fontsize=11)  # Veľkosť textu nastavená na 14
     plt.xticks(rotation=0)  # Nastavenie rotácie textu na x-ovej osi
-    plt.ylabel('Cena')
-    plt.legend()
+    plt.ylabel('Cena', fontsize=11)  # Veľkosť textu nastavená na 14
+    plt.legend(prop={'size': 16})
 
     plt.subplot(4, 1, 2)
-    plt.plot(df_dam2023.index, result.trend, label='Trend')
-    plt.xlabel('Dátum')
+    plt.plot(combined_years.index, result.trend, label='Trend')
+    plt.xlabel('Dátum', fontsize=11)  # Veľkosť textu nastavená na 14
     plt.xticks(rotation=0)  # Nastavenie rotácie textu na x-ovej osi
-    plt.ylabel('Cena')
-    plt.legend()
+    plt.ylabel('Cena', fontsize=11)  # Veľkosť textu nastavená na 14
+    plt.legend(prop={'size': 16})
 
     plt.subplot(4, 1, 3)
-    plt.plot(df_dam2023.index, result.seasonal, label='Sezónnosť')
-    plt.xlabel('Dátum')
-    plt.xticks(rotation=0)
-    plt.ylabel('Cena')
-    plt.legend()
+    plt.plot(combined_years.index, result.seasonal, label='Sezónnosť')
+    plt.xlabel('Dátum', fontsize=11)  # Veľkosť textu nastavená na 14
+    plt.xticks(rotation=0)  # Nastavenie rotácie textu na x-ovej osi
+    plt.ylabel('Cena', fontsize=11)  # Veľkosť textu nastavená na 14
+    plt.legend(prop={'size': 16})
 
     plt.subplot(4, 1, 4)
-    plt.plot(df_dam2023.index, result.resid, label='Reziduá')
-    plt.xlabel('Dátum')
-    plt.xticks(rotation=0)
-    plt.ylabel('Cena')
-    plt.legend()
+    plt.plot(combined_years.index, result.resid, label='Reziduá')
+    plt.xlabel('Dátum', fontsize=11)  # Veľkosť textu nastavená na 14
+    plt.xticks(rotation=0)  # Nastavenie rotácie textu na x-ovej osi
+    plt.ylabel('Cena', fontsize=11)  # Veľkosť textu nastavená na 14
+    plt.legend(prop={'size': 16})
+
+    plt.show()
 
     plt.savefig("Graphs/Dekompozícia_STL_2023_DEC_DAM")
     plt.tight_layout()
@@ -394,7 +401,7 @@ def qq_plot(market_type, date_from, date_to):
 #qq_plot("IDM","2023-01-01", "2024-01-01")
 #ACF("IDM","2023-01-01", "2024-01-01")
 #PACF("IDM","2023-01-01", "2024-01-01")
-#STLDecomposition()
+STLDecomposition()
 #AdFullerTestIDM15()
 #AdFullerTestDAM()
 #STLDecomposition()

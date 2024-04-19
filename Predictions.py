@@ -59,7 +59,7 @@ def sarima_model(number_of_days_to_predict, market_type):
 def auto_regressive_model(number_of_days_to_predict, market_type):
     df_dam = data_preparing(market_type)
 
-    model = AutoReg(df_dam['price'], lags=24)
+    model = AutoReg(df_dam['price'], lags=168)
     model_fit = model.fit()
 
     predictions = model_fit.predict(start=len(df_dam), end=len(df_dam) + number_of_days_to_predict)

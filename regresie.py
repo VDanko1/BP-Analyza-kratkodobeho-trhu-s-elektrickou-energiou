@@ -1,11 +1,8 @@
-import json
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pickle
-
 
 def korelacia():
     with open("Data/DAM_results_2023-12-11.pkl", "rb") as file_dam:
@@ -89,7 +86,7 @@ def korelacie_cudzie_markety():
 korelacie_cudzie_markety()
 
 
-def korelacia_denna():
+def korelacia_():
     with open("Data/DAM_results_2023.pkl", "rb") as file_dam:
         data_dam = pickle.load(file_dam)
 
@@ -143,13 +140,11 @@ def korelacia_denna():
     plt.xlabel('Perióda', fontsize=12)
     plt.ylabel('Koeficient korelácie', fontsize=12)
     plt.xticks(range(1,25))
-    #plt.savefig('Graphs/Korelacie bar DAM a IDM kazda perioda')
     plt.grid(axis='y', alpha=0.5)
     plt.show()
 
 
-# Spustite funkciu pre vytvorenie korelácie a vykreslenie scatter plotu
-korelacia_denna()
+korelacia_()
 
 
 def novaMetoda():
@@ -165,7 +160,6 @@ def novaMetoda():
     df_dam['deliveryStart'] = pd.to_datetime(df_dam['deliveryStart']).dt.tz_localize(None)
     df_idm['deliveryStart'] = pd.to_datetime(df_idm['deliveryStart']).dt.tz_localize(None)
 
-    # Zozbierajte korelačné koeficienty pre každú hodinu
     correlation_data = []
 
     for hour in range(24):
@@ -226,7 +220,6 @@ def korelacia_denna_vykresli():
     # print(merged_data.head(50))
 
 
-# korelacia_denna_vykresli()
 def korelacia_nedenna():
     with open("Data/DAM_results_2023-12-11.pkl", "rb") as file_dam:
         data_dam = pickle.load(file_dam)

@@ -1,11 +1,8 @@
 import datetime
-import threading
-import time
 import PySimpleGUI as sg
 import priceGraphsYearly as pgy
 import PredictionAnalysis as pal
 import Predictions as pred
-
 
 
 def home_page():
@@ -21,7 +18,6 @@ def home_page():
         ]
     ]
 
-    # Vytvorenie okna
     window = sg.Window("Domov", layout, size=(600, 400), ttk_theme=ttk_style)
 
     while True:
@@ -40,12 +36,10 @@ def home_page():
             predictions_visualization()
             break
 
-    # Zatvorenie okna
     window.close()
 
 
 def predictions_visualization():
-
     sg.theme('SystemDefaultForReal')
     ttk_style = 'vista'
 
@@ -163,6 +157,7 @@ def predictions_visualization():
 
         window.close()
 
+
 def vykreslovanie_analyz():
     layout = [
         [sg.Button("Naspäť", size=(30, 1), use_ttk_buttons=True),
@@ -214,14 +209,13 @@ def vykreslovanie_analyz():
             typ_grafu = selected_value
             print(f'Vybraná hodnota: {selected_value}')
 
-
         if event == 'INPUT 1':
-            vybrany_datum_str = values[event]  # Predpokladám, že hodnota je reťazec (string)
+            vybrany_datum_str = values[event]
             print(vybrany_datum_str)
             try:
                 vybrany_datum_od = datetime.datetime.strptime(vybrany_datum_str, '%Y-%m-%d')
                 datum_od = vybrany_datum_str
-                if datetime.datetime(2020, 1, 1) <= vybrany_datum_od <= datetime.datetime(2024, 4, 1):
+                if datetime.datetime(2020, 1, 1) <= vybrany_datum_od <= datetime.datetime.now():
                     continue
                 else:
                     sg.popup_error("Zadaný dátum musí byť medzi 1.1.2020 a 1.4.2024.")
@@ -229,12 +223,12 @@ def vykreslovanie_analyz():
                 sg.popup_error("Nesprávny formát dátumu. Použite formát YYYY-MM-DD.")
 
         if event == 'INPUT 2':
-            vybrany_datum_str = values[event]  # Predpokladám, že hodnota je reťazec (string)
+            vybrany_datum_str = values[event]
             print(vybrany_datum_str)
             try:
                 vybrany_datum_do = datetime.datetime.strptime(vybrany_datum_str, '%Y-%m-%d')
                 datum_do = vybrany_datum_str
-                if datetime.datetime(2020, 1, 1) <= vybrany_datum_do <= datetime.datetime(2024, 4, 1):
+                if datetime.datetime(2020, 1, 1) <= vybrany_datum_do <= datetime.datetime.now():
                     if vybrany_datum_od <= vybrany_datum_do:
                         continue
                     else:

@@ -1,9 +1,12 @@
 import pickle
+
+import numpy as np
 import requests
 import pmdarima as pmd
 import datetime
 import matplotlib.pyplot as plt
 import pandas as pd
+from sklearn.metrics import mean_squared_error
 from statsmodels.tsa.ar_model import AutoReg
 
 def sarima_model(number_of_days_to_predict, market_type):
@@ -181,10 +184,13 @@ def sarimax_data_preparing():
 def SarimaTrainTest(number_of_days_to_predict):
     df_dam = data_preparing_working("DAM")
 
-    train_df = df_dam.iloc[:-24, :]  # Trénovacia množina obsahuje všetky údaje až po posledných 720 hodinách
-    test_size = df_dam.iloc[-24:, :]  # Testovacia množina zahŕňa posledných 720 hodín
+    train_df = df_dam.iloc[:-48, :]  # Trénovacie dáta bez posledných 24 hodín
+    test_df = df_dam.iloc[-24:, :]  # Testovacie dáta - posledné 24 hodín
 
-    model = pmd.auto_arima(df_dam['price'], start_p=1, start_q=0, max_p=1, max_q=0,
+    print(train_df.tail())
+    print(test_df)
+
+    model = pmd.auto_arima(train_df['price'], start_p=1, start_q=0, max_p=1, max_q=0,
                            start_P=2, start_Q=0, max_P=2, max_Q=0, m=24, seasonal=True,
                            trace=True, stepwise=False, max_time=50,
                            d=1, D=1, suppress_warnings=True)
@@ -196,19 +202,34 @@ def SarimaTrainTest(number_of_days_to_predict):
         'price': predikcie_original.values  # Druhý stĺpec bude ceny
     })
 
-    print(predikcie_original)
+    print(predikcie_df)
+
+    # Získanie dátumov pre testovaciu sadu
+    test_dates = test_df.index
+    predikcie = predikcie_df['price']
+    test_ceny = test_df['price']
+
+    # Filtrovanie predikcií na základe dátumov v testovacej sade
+    predikcie_df = predikcie_df[predikcie_df['deliveryEnd'].isin(test_dates)]
+
+    mse = mean_squared_error(test_ceny, predikcie)
+
+    # Vypočítanie RMSE
+    rmse = np.sqrt(mse)
+
+    print("Mean Squared Error (MSE):", mse)
+    print("Root Mean Squared Error (RMSE):", rmse)
 
     plt.figure(figsize=(12, 9))  # Zväčšenie veľkosti grafu
     plt.plot(predikcie_df['deliveryEnd'], predikcie_df['price'], label='Predikované ceny', color='red')
-    plt.plot(test_size.index, test_size['price'], label='testovacie ceny', color='blue')
+    plt.plot(test_df.index, test_df['price'], label='Testovacie ceny', color='blue')
     plt.title('Predikované ceny - model SARIMA', fontsize=16)
     plt.xlabel('Dátum', fontsize=14)
     plt.ylabel('Cena €/MWh', fontsize=14)
     plt.legend()
     plt.show()
 
-    # Formátovanie dátumov na x-ovej osi
-    # n = 4  # Každý n-tý dátum sa zobrazí
+    # n = 4
     # formatted_dates = pd.to_datetime(predikcie_df['deliveryEnd'][::n]).strftime('%Y-%m-%d %H:%M:%S')
     # plt.xticks(predikcie_df['deliveryEnd'][::n], formatted_dates, rotation=20)
 
@@ -307,4 +328,4 @@ def data_preparing_working(market_type):
 # SARIMAX(7,"DAM")
 #sarimax_model(24, "DAM")
 # AutoRegressiveModel(30,"DAM")
-# SarimaTrainTest(24)
+SarimaTrainTest(24)

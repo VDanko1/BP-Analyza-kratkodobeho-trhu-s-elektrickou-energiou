@@ -1,4 +1,3 @@
-import numpy as np
 from scipy.stats import stats, norm
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.tsa.stl._stl import STL
@@ -17,7 +16,6 @@ def AdFullerTestDAM():
     with open("Data/DAM_results_2023.pkl", "rb") as file_dam:
         data_dam = pickle.load(file_dam)
 
-    # Vytvorte DataFrame z vašich dát
     df_dam = pd.DataFrame(data_dam)
     df_dam = df_dam[df_dam['price'] > 0]
 
@@ -42,11 +40,8 @@ def AdFullerTestDAM():
             "P-hodnota je vyšší než 0.05, což naznačuje, že neexistují statisticky významné rozdíly ve variabilitě mezi skupinami dat.")
         print("Nulová hypotéza o stejné variabilitě mezi skupinami dat není zamítnuta.")
 
-
-    # ADF test pre overenie stacionarity
     result = adfuller(price_series.dropna())  # Dropna na odstránenie prípadných chýbajúcich hodnôt
 
-    # Výsledky testu
     adf_statistic = result[0]
     p_value = result[1]
     critical_values = result[4]
@@ -59,11 +54,11 @@ def AdFullerTestDAM():
     for key, value in critical_values.items():
         print(f'   {key}: {value}')
 
-    # Interpretácia výsledkov
     if p_value <= 0.05:
         print('Null hypothesis (inability to reject the unit root) is rejected, the time series is stationary.')
     else:
         print('Null hypothesis (inability to reject the unit root) is not rejected, the time series is non-stationary.')
+
 
 def merging_data_and_preparation_IDM15(market_type, date_from, date_to):
     with open(f"Data/{market_type}_results_2024-JAN-APR.pkl", "rb") as file_dam:
@@ -94,6 +89,7 @@ def merging_data_and_preparation_IDM15(market_type, date_from, date_to):
     merged_df = pd.concat([df_dam2024, df_dam2023])
     merged_df = merged_df[(merged_df['deliveryEnd'] >= date_from) & (merged_df['deliveryEnd'] <= date_to)]
     return merged_df
+
 
 def merging_data_and_preparation_dam_idm(market_type, date_from, date_to):
     with open(f"Data/{market_type}_results_2024-JAN-APR.pkl", "rb") as file_dam:
@@ -139,6 +135,7 @@ def merging_data_and_preparation_dam_idm(market_type, date_from, date_to):
     merged_df = pd.concat([df_dam2020, df_dam2021, df_dam2022, df_dam2023, df_dam2024])
     merged_df = merged_df[(merged_df['deliveryEnd'] >= date_from) & (merged_df['deliveryEnd'] <= date_to)]
     return merged_df
+
 
 def Histogram(market_type, date_from, date_to):
     if market_type == "IDM15":
@@ -207,7 +204,7 @@ def DecompositionOfTimeSeries():
     price_series = df_dam['price']
 
     df_dam['deliveryEnd'] = pd.to_datetime(df_dam['deliveryEnd'])
-    #df_dam.dropna()
+    # df_dam.dropna()
 
     result = seasonal_decompose(price_series, model='additive')  # Perioda 24 pre dennú sezónnosť
 
@@ -243,9 +240,8 @@ def DecompositionOfTimeSeries():
     plt.legend()
 
     plt.tight_layout()
-    #plt.savefig("Graphs/Dekompozicia_DAM_2023_Additive")
+    # plt.savefig("Graphs/Dekompozicia_DAM_2023_Additive")
     plt.show()
-
 
 
 def STLDecomposition():
@@ -279,7 +275,7 @@ def STLDecomposition():
     df_dam2021.set_index('deliveryEnd', inplace=True)
     df_dam2020.set_index('deliveryEnd', inplace=True)
 
-    combined_years = pd.concat([df_dam2020,df_dam2021,df_dam2022,df_dam2023],ignore_index=False)
+    combined_years = pd.concat([df_dam2020, df_dam2021, df_dam2022, df_dam2023], ignore_index=False)
     combined_years.dropna()
 
     combined_years['diff_price'] = combined_years['price'].diff()
@@ -327,6 +323,7 @@ def STLDecomposition():
     plt.tight_layout()
     plt.show()
 
+
 def ACF(market_type, date_from, date_to):
     if (market_type == "IDM15"):
         merged_df = merging_data_and_preparation_IDM15(market_type, date_from, date_to)
@@ -338,19 +335,21 @@ def ACF(market_type, date_from, date_to):
     plot_acf(merged_df['price'], lags=24, ax=ax)
 
     if market_type == "IDM":
-        ax.set_title(f'ACF graf pre ceny vnútrodenného trhu s 60 minútovou periódou - granularita 1 hodina', fontsize=12)
+        ax.set_title(f'ACF graf pre ceny vnútrodenného trhu s 60 minútovou periódou - granularita 1 hodina',
+                     fontsize=12)
     elif market_type == "DAM":
         ax.set_title(f'ACF graf pre ceny denného trhu - granularita 1 hodina', fontsize=12)
     elif market_type == "IDM15":
-        ax.set_title(f'ACF graf pre ceny vnútrodenného trhu s 15 minútovou periódou - granularita 1 hodina', fontsize=12)
+        ax.set_title(f'ACF graf pre ceny vnútrodenného trhu s 15 minútovou periódou - granularita 1 hodina',
+                     fontsize=12)
 
     ax.set_xlabel('Lag')
     ax.set_ylabel('ACF')
     plt.savefig("Graphs/ACF_from_to", bbox_inches='tight')  # bbox_inches='tight' zabezpečí, že sa uloží celý obrázok
     plt.show()
 
-def PACF(market_type, date_from, date_to):
 
+def PACF(market_type, date_from, date_to):
     if market_type == "IDM15":
         merged_df = merging_data_and_preparation_IDM15(market_type, date_from, date_to)
     else:
@@ -397,11 +396,12 @@ def qq_plot(market_type, date_from, date_to):
     plt.savefig("Graphs/QQ_plot_from_to")
     plt.show()
 
+
 # Zavolanie funkcie na vykreslenie Q-Q grafu
-#qq_plot("IDM","2023-01-01", "2024-01-01")
-#ACF("IDM","2023-01-01", "2024-01-01")
-#PACF("IDM","2023-01-01", "2024-01-01")
-STLDecomposition()
-#AdFullerTestIDM15()
-#AdFullerTestDAM()
+# qq_plot("IDM","2023-01-01", "2024-01-01")
+# ACF("IDM","2023-01-01", "2024-01-01")
+# PACF("IDM","2023-01-01", "2024-01-01")
 #STLDecomposition()
+# AdFullerTestIDM15()
+# AdFullerTestDAM()
+# STLDecomposition()

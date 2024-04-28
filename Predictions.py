@@ -1,5 +1,4 @@
 import pickle
-
 import numpy as np
 import requests
 import pmdarima as pmd
@@ -8,6 +7,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.metrics import mean_squared_error
 from statsmodels.tsa.ar_model import AutoReg
+
 
 def sarima_model(number_of_days_to_predict, market_type):
     df_dam = data_preparing(market_type)
@@ -79,7 +79,7 @@ def auto_regressive_model(number_of_days_to_predict, market_type):
     print(predikcie_df['price'])
     print(predikcie_df['deliveryEnd'])
 
-    plt.figure(figsize=(10, 6))  # Zväčšenie veľkosti grafu
+    plt.figure(figsize=(10, 6))
     plt.plot(predikcie_df['deliveryEnd'], predikcie_df['price'], label='Predikcie', color='blue')
     if market_type == "IDM":
         plt.title('Predikcie cien vnutrodenného trhu - model AR')
@@ -182,13 +182,12 @@ def sarimax_data_preparing():
 
 
 def SarimaTrainTest(number_of_days_to_predict):
-    df_dam = data_preparing_working("DAM")
+    df_dam = data_preparing_working("IDM")
 
-    train_df = df_dam.iloc[:-48, :]  # Trénovacie dáta bez posledných 24 hodín
-    test_df = df_dam.iloc[-24:, :]  # Testovacie dáta - posledné 24 hodín
+    train_df = df_dam.iloc[:-96, :]
+    test_df = df_dam.iloc[-96:, :]
 
-    print(train_df.tail())
-    print(test_df)
+
 
     model = pmd.auto_arima(train_df['price'], start_p=1, start_q=0, max_p=1, max_q=0,
                            start_P=2, start_Q=0, max_P=2, max_Q=0, m=24, seasonal=True,
@@ -198,23 +197,20 @@ def SarimaTrainTest(number_of_days_to_predict):
     predikcie_original = model.predict(n_periods=number_of_days_to_predict)
 
     predikcie_df = pd.DataFrame({
-        'deliveryEnd': predikcie_original.index,  # Prvý stĺpec bude dátumy
-        'price': predikcie_original.values  # Druhý stĺpec bude ceny
+        'deliveryEnd': predikcie_original.index,
+        'price': predikcie_original.values
     })
 
     print(predikcie_df)
 
-    # Získanie dátumov pre testovaciu sadu
     test_dates = test_df.index
     predikcie = predikcie_df['price']
     test_ceny = test_df['price']
 
-    # Filtrovanie predikcií na základe dátumov v testovacej sade
     predikcie_df = predikcie_df[predikcie_df['deliveryEnd'].isin(test_dates)]
 
     mse = mean_squared_error(test_ceny, predikcie)
 
-    # Vypočítanie RMSE
     rmse = np.sqrt(mse)
 
     print("Mean Squared Error (MSE):", mse)
@@ -229,17 +225,20 @@ def SarimaTrainTest(number_of_days_to_predict):
     plt.legend()
     plt.show()
 
-    # n = 4
-    # formatted_dates = pd.to_datetime(predikcie_df['deliveryEnd'][::n]).strftime('%Y-%m-%d %H:%M:%S')
-    # plt.xticks(predikcie_df['deliveryEnd'][::n], formatted_dates, rotation=20)
-
 
 def data_preparing(market_type):
     today = datetime.date.today()
     api_url = ""
 
     if market_type == "DAM":
+        today = datetime.date.today()
+
+        if datetime.datetime.now().hour >= 13:
+            today += datetime.timedelta(days=1)
+
+        print(today)
         api_url = f"https://isot.okte.sk/api/v1/dam/results?deliveryDayFrom=2024-01-01&deliveryDayTo={today}"
+
         with open('Data/DAM_results_2023.pkl', "rb") as file_2022:
             data_DAM2023 = pickle.load(file_2022)
 
@@ -249,6 +248,7 @@ def data_preparing(market_type):
         df_dam2023.set_index('deliveryEnd', inplace=True)
         df_dam2023['price'] = pd.to_numeric(df_dam2023['price'], errors='coerce')
         df_dam2023.dropna(inplace=True)
+
 
     elif market_type == "IDM":
         with open('Data/IDM_results_2023.pkl', "rb") as file_2022:
@@ -323,9 +323,3 @@ def data_preparing_working(market_type):
     return response_df
 
 
-# sarima_model(24, "DAM")
-# sarimax_data_preparing()
-# SARIMAX(7,"DAM")
-#sarimax_model(24, "DAM")
-# AutoRegressiveModel(30,"DAM")
-SarimaTrainTest(24)

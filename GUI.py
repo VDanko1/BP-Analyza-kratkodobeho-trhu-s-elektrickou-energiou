@@ -4,7 +4,6 @@ import priceGraphsYearly as pgy
 import PredictionAnalysis as pal
 import Predictions as pred
 
-
 def home_page():
     sg.theme('SystemDefaultForReal')
     ttk_style = 'vista'

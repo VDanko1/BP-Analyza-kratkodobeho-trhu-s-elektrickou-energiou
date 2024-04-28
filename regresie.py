@@ -40,7 +40,6 @@ def korelacia():
     print(f"Correlation between DAM price and IDM priceWeightedAverage: {correlation}")
     print(f"Linear Regression Equation: IDM_Price = {fit[0]:.4f} * DAM_Price + {fit[1]:.4f}")
 
-# korelacia()
 
 def korelacie_cudzie_markety():
     with open('Data/DAM_results_2023.pkl', "rb") as file:
@@ -83,7 +82,6 @@ def korelacie_cudzie_markety():
     plt.savefig('Graphs/Slovensko-Cesky trh korelacia - final')
     plt.show()
 
-korelacie_cudzie_markety()
 
 
 def korelacia_():
@@ -105,7 +103,6 @@ def korelacia_():
 
     merged_data['hour'] = merged_data['deliveryStart'].dt.hour
     correlations=[]
-    # Vytvorte korelačné grafy pre každú hodinu
     for hour in range(24):
         hour_data = merged_data[merged_data['deliveryStart'].dt.hour == hour]
 
@@ -144,51 +141,6 @@ def korelacia_():
     plt.show()
 
 
-korelacia_()
-
-
-def novaMetoda():
-    with open("Data/DAM_results_2023.pkl", "rb") as file_dam:
-        data_dam = pickle.load(file_dam)
-
-    with open("Data/IDM_results_2023.pkl", "rb") as file_idm:
-        data_idm = pickle.load(file_idm)
-
-    df_dam = pd.DataFrame(data_dam)
-    df_idm = pd.DataFrame(data_idm)
-
-    df_dam['deliveryStart'] = pd.to_datetime(df_dam['deliveryStart']).dt.tz_localize(None)
-    df_idm['deliveryStart'] = pd.to_datetime(df_idm['deliveryStart']).dt.tz_localize(None)
-
-    correlation_data = []
-
-    for hour in range(24):
-        hour_data = pd.merge(df_dam[['price', 'deliveryStart']],
-                             df_idm[['priceWeightedAverage', 'deliveryStart']],
-                             on='deliveryStart', suffixes=('_DAM', '_IDM')).dropna()
-
-        hour_data['hour'] = hour_data['deliveryStart'].dt.hour
-        hour_data = hour_data[hour_data['hour'] == hour]
-
-        correlation = hour_data['price'].corr(hour_data['priceWeightedAverage'])
-        correlation_data.append({'Hour': hour, 'Correlation': correlation})
-
-    # Vytvorte korelačnú tabuľku
-    correlation_table = pd.DataFrame(correlation_data)
-
-    # Vykreslite korelačnú tabuľku
-    plt.figure(figsize=(10, 6))
-    sns.barplot(x='Hour', y='Correlation', data=correlation_table)
-    plt.title('Korelácia medzi DAM a IDM pre každú hodinu')
-    plt.xlabel('Hodina')
-    plt.ylabel('Korelácia')
-    #plt.savefig("Korelacia medzi hodinami DAM-IDM")
-    plt.show()
-
-    # Vypíšte tabuľku
-    print(correlation_table)
-
-
 def korelacia_denna_vykresli():
     with open("Data/DAM_results_2023.pkl", "rb") as file_dam:
         data_dam = pickle.load(file_dam)
@@ -202,16 +154,13 @@ def korelacia_denna_vykresli():
     df_dam['deliveryStart'] = pd.to_datetime(df_dam['deliveryStart']).dt.tz_localize(None)
     df_idm['deliveryStart'] = pd.to_datetime(df_idm['deliveryStart']).dt.tz_localize(None)
 
-    # Pre každú hodinu dňa spojte údaje DAM a IDM
     merged_data = pd.merge(df_dam[['price', 'deliveryStart']], df_idm[['priceWeightedAverage', 'deliveryStart']],
                            on='deliveryStart', suffixes=('_DAM', '_IDM')).dropna()
     numeric_data = df_dam.select_dtypes(include=['float64', 'int64'])
     correlation_matrix = numeric_data.corr()  # df_dam.drop(columns=['deliveryStart', 'deliveryEnd', 'deliveryDay']).corr()
 
-    # Nastavenie štýlu heatmapy
     sns.set(style="white")
 
-    # Vytvorenie heatmapy
     plt.figure(figsize=(20, 20))
     sns.heatmap(correlation_matrix, annot=True, cmap="coolwarm", fmt=".2f", linewidths=.5)
     plt.title('Korelácia medzi DAM údajmi')
@@ -220,7 +169,7 @@ def korelacia_denna_vykresli():
     # print(merged_data.head(50))
 
 
-def korelacia_nedenna():
+def korelacia():
     with open("Data/DAM_results_2023-12-11.pkl", "rb") as file_dam:
         data_dam = pickle.load(file_dam)
 
@@ -233,15 +182,12 @@ def korelacia_nedenna():
     df_dam['deliveryStart'] = pd.to_datetime(df_dam['deliveryStart']).dt.tz_localize(None)
     df_idm['deliveryStart'] = pd.to_datetime(df_idm['deliveryStart']).dt.tz_localize(None)
 
-    # Merge DAM and IDM data on deliveryStart
     merged_data = pd.merge(df_dam[['price', 'deliveryStart']], df_idm[['priceWeightedAverage', 'deliveryStart']],
                            on='deliveryStart', suffixes=('_DAM', '_IDM')).dropna()
 
-    # Create a scatter plot for all data
     plt.figure(figsize=(8, 6))
     sns.scatterplot(x='price', y='priceWeightedAverage', data=merged_data)
 
-    # Perform linear regression on all data
     x = merged_data['price']
     y = merged_data['priceWeightedAverage']
     fit = np.polyfit(x, y, deg=1)

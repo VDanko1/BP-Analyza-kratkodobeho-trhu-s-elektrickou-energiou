@@ -40,7 +40,7 @@ def AdFullerTestDAM():
             "P-hodnota je vyšší než 0.05, což naznačuje, že neexistují statisticky významné rozdíly ve variabilitě mezi skupinami dat.")
         print("Nulová hypotéza o stejné variabilitě mezi skupinami dat není zamítnuta.")
 
-    result = adfuller(price_series.dropna())  # Dropna na odstránenie prípadných chýbajúcich hodnôt
+    result = adfuller(price_series.dropna())
 
     adf_statistic = result[0]
     p_value = result[1]
@@ -165,15 +165,12 @@ def AdFullerTestIDM15():
     with open("Data/IDM_results_2023_15min.pkl", "rb") as file_dam:
         data_dam = pickle.load(file_dam)
 
-    # Vytvorte DataFrame z vašich dát
     df_dam = pd.DataFrame(data_dam)
 
     price_series = df_dam['priceAverage']
 
-    # ADF test pre overenie stacionarity
-    result = adfuller(price_series.dropna())  # Dropna na odstránenie prípadných chýbajúcich hodnôt
+    result = adfuller(price_series.dropna())
 
-    # Výsledky testu
     adf_statistic = result[0]
     p_value = result[1]
     critical_values = result[4]
@@ -185,7 +182,6 @@ def AdFullerTestIDM15():
     for key, value in critical_values.items():
         print(f'   {key}: {value}')
 
-    # Interpretácia výsledkov
     if p_value <= 0.05:
         print('Null hypothesis (inability to reject the unit root) is rejected, the time series is stationary.')
     else:
@@ -196,7 +192,6 @@ def DecompositionOfTimeSeries():
     with open("Data/DAM_results_2023DEC.pkl", "rb") as file_dam:
         data_dam = pickle.load(file_dam)
 
-    # Vytvorte DataFrame z vašich dát
     df_dam = pd.DataFrame(data_dam)
 
     df_dam['diff_price'] = df_dam['price'].diff()
@@ -208,7 +203,6 @@ def DecompositionOfTimeSeries():
 
     result = seasonal_decompose(price_series, model='additive')  # Perioda 24 pre dennú sezónnosť
 
-    # Vykreslenie dekompozície
     plt.figure(figsize=(12, 12))
 
     plt.subplot(4, 1, 1)
@@ -397,11 +391,3 @@ def qq_plot(market_type, date_from, date_to):
     plt.show()
 
 
-# Zavolanie funkcie na vykreslenie Q-Q grafu
-# qq_plot("IDM","2023-01-01", "2024-01-01")
-# ACF("IDM","2023-01-01", "2024-01-01")
-# PACF("IDM","2023-01-01", "2024-01-01")
-#STLDecomposition()
-# AdFullerTestIDM15()
-# AdFullerTestDAM()
-# STLDecomposition()

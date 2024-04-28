@@ -106,8 +106,6 @@ def visualize_idm_dam():
     plt.plot(df_dam['deliveryStart'], df_dam['price'], linestyle='-', color='r',
              label="Denný trh")
 
-    # plt.plot(df_idm_15['deliveryStart'], df_idm_15['priceAverage'], linestyle='-', color='g',alpha=0.2,
-    #         label="IDM (15 min) electricity price €/MWh")
 
     plt.xticks(rotation=30)  # Adjust the rotation if needed
     plt.title("Porovnanie cien na dennom a vnútrodennom trhu za december 2023  - granularita 1 hodina", fontsize=16)
@@ -115,8 +113,7 @@ def visualize_idm_dam():
     plt.ylabel("Cena €/MWh", fontsize=12)
     plt.legend(fontsize='large')
     plt.tight_layout()
-    # plt.savefig("DAM a IDM (60,15 min) porovnanie december 2023")
-    # Show the plot
+
     plt.show()
 
 

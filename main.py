@@ -1,8 +1,8 @@
-import GUI
+import gui
 
 
 def run_gui():
-    gui = GUI()
+    gui = gui()
     gui.run()
 
 if __name__ == '__main__':

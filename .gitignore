@@ -146,6 +146,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# To ignore graphs
+Graphs/
+
 # pytype static type analyzer
 .pytype/
 
